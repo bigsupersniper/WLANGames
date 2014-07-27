@@ -29,6 +29,9 @@ import org.bigsupersniper.wlangames.socket.SocketMessage;
 import org.bigsupersniper.wlangames.socket.SocketServer;
 import org.bigsupersniper.wlangames.socket.SocketUtils;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 
 public class GameServerFragment extends Fragment{
 
@@ -41,6 +44,7 @@ public class GameServerFragment extends Fragment{
     private RadioButton rbDice;
     private RadioButton rbPoker;
     private Button btnNext;
+    private TextView tvDesc;
 
     //client
     private SocketClient socketClient;
@@ -64,11 +68,13 @@ public class GameServerFragment extends Fragment{
 
     private void initServerView(View view){
         context = view.getContext();
-        //ipaddress view
+        //ip
         tvIP = (TextView) view.findViewById(R.id.tvIP);
         tvIP.setText(getIPAdress(context));
-        //port edit
+        //port
         etPort = (EditText) view.findViewById(R.id.etPort);
+        //desc
+        tvDesc = (TextView) view.findViewById(R.id.tvDesc);
         //open or close service
         swServer = (Switch)view.findViewById(R.id.swServer);
         swServer.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -111,7 +117,15 @@ public class GameServerFragment extends Fragment{
                 if (rbPoker.isChecked()) what = HandlerWhats.Broadcast_CPoker;
                 if (what != 0){
                     socketServer.broadcast(what);
+                    String desc = "";
+                    if (what == HandlerWhats.Broadcast_BluffDice){
+                        desc = "上一局 <大话骰> 开始于 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                    }else if(what == HandlerWhats.Broadcast_CPoker) {
+                        desc = "上一局 <十三水> 开始于 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                    }
+                    tvDesc.setText(desc);
                 }
+
             }
         });
     }

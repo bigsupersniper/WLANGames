@@ -145,13 +145,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Small Text"
             android:id="@+id/tvDesc"
             android:layout_below="@+id/radioGroup"
-            android:layout_alignRight="@+id/radioGroup"
-            android:layout_alignEnd="@+id/radioGroup"
             android:layout_marginTop="10dp"
-            android:textColor="#ff07a8ff" />
+            android:textColor="#ff07a8ff"
+            android:text="双方都是asdas对方"
+            android:layout_marginLeft="10dp"
+            android:singleLine="false" />
 
     </RelativeLayout>
 

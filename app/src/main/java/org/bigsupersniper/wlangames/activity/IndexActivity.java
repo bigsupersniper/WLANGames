@@ -126,7 +126,8 @@ public class IndexActivity extends Activity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_settings) {
-            return true;
+            this.finish();
+            System.exit(0);
         }
         return super.onOptionsItemSelected(item);
     }
