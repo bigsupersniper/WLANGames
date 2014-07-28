@@ -11,35 +11,26 @@ import java.nio.channels.SocketChannel;
 
 public class SocketClient {
 
-    public interface OnReadListener{
-        public void onRead(SocketMessage msg);
-    }
-
     private SocketChannel channel;
     private boolean connected = false;
     private Selector selector;
     private ByteBuffer readBuffer;
     private ByteBuffer sendBuffer;
     private Thread readThread ;
-    private String remoteIP;
-    private OnReadListener onReadListener;
-
-    public void setOnReadListener(OnReadListener onReadListener){
-        this.onReadListener = onReadListener;
-    }
-
+    private String localIP;
+    private OnSocketClientListener onSocketListener;
 
     public SocketClient(){
-        try {
-            channel = SocketChannel.open();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
+
     }
 
     public SocketClient(SocketChannel channel){
         this.channel = channel;
         this.init();
+    }
+
+    public void setOnSocketListener(OnSocketClientListener onSocketListener){
+        this.onSocketListener = onSocketListener;
     }
 
     private void init(){
@@ -50,62 +41,66 @@ public class SocketClient {
             this.connected = true;
             channel.configureBlocking(false);
             channel.register(selector, SelectionKey.OP_READ);
-            this.remoteIP = channel.socket().getRemoteSocketAddress().toString().replace("/","");
-            readThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (channel.isConnected()) {
-                        try {
-                            if (selector.select() == 0) continue;
-
-                            SocketChannel sc;
-                            StringBuilder sb = new StringBuilder();
-                            for (SelectionKey key : selector.selectedKeys()) {
-                                selector.selectedKeys().remove(key);
-                                if (key.isReadable()) {
-                                    sc = (SocketChannel) key.channel();
-                                    readBuffer.clear();
-                                    int len = 0;
-                                    while ((len = sc.read(readBuffer)) > 0) {
-                                        byte[] buffer = readBuffer.array();
-                                        if (buffer[len - 1] == SocketUtils.EndByte) {
-                                            sb.append(new String(buffer, 0,len - 1, SocketUtils.MessageCharset));
-                                            break;
-                                        } else {
-                                            sb.append(new String(buffer, 0, len, SocketUtils.MessageCharset));
-                                        }
-                                        readBuffer.clear();
-                                    }
-                                    //System.out.println("read : " + sb.toString());
-                                    if (onReadListener != null){
-                                        onReadListener.onRead(new Gson().fromJson(sb.toString(), SocketMessage.class));
-                                    }
-                                }
-                            }
-                        } catch (IOException e) {
-                            System.out.println(e.getMessage());
-                            break;
-                        }
-                    }
-                }
-            });
+            this.localIP = channel.socket().getRemoteSocketAddress().toString().replace("/","");
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 
     public void connect(String ip , int port){
         try {
+            channel = SocketChannel.open();
             channel.connect(new InetSocketAddress(ip, port));
             this.init();
-            this.beginRead();
+            this.openRead();
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    public void beginRead(){
+    public void openRead(){
         if (this.connected){
+            if (readThread == null){
+                readThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (channel.isConnected()) {
+                            try {
+                                if (selector.select() == 0) continue;
+
+                                SocketChannel sc;
+                                StringBuilder sb = new StringBuilder();
+                                for (SelectionKey key : selector.selectedKeys()) {
+                                    selector.selectedKeys().remove(key);
+                                    if (key.isReadable()) {
+                                        sc = (SocketChannel) key.channel();
+                                        readBuffer.clear();
+                                        int len = 0;
+                                        while ((len = sc.read(readBuffer)) > 0) {
+                                            byte[] buffer = readBuffer.array();
+                                            if (buffer[len - 1] == SocketUtils.EndByte) {
+                                                sb.append(new String(buffer, 0,len - 1, SocketUtils.MessageCharset));
+                                                break;
+                                            } else {
+                                                sb.append(new String(buffer, 0, len, SocketUtils.MessageCharset));
+                                            }
+                                            readBuffer.clear();
+                                        }
+
+                                        if (onSocketListener != null){
+                                            SocketMessage msg = new Gson().fromJson(sb.toString(), SocketMessage.class);
+                                            onSocketListener.onRead(msg);
+                                        }
+                                    }
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
             readThread.start();
         }
     }
@@ -122,7 +117,7 @@ public class SocketClient {
                     sendBuffer.clear();
                     //System.out.println("send : " + json.replace(SocketUtils.EndChar, ""));
                 } catch (IOException e) {
-                    System.out.println(e.getMessage());
+                    e.printStackTrace();
                 }
             }
         }).start();
@@ -132,8 +127,8 @@ public class SocketClient {
         return this.connected;
     }
 
-    public String getRemoteIP(){
-        return this.remoteIP;
+    public String getLocalIP(){
+        return this.localIP;
     }
 
     public void disconnect(){
@@ -153,7 +148,7 @@ public class SocketClient {
                     channel.close();
                 }
             } catch (IOException e) {
-                System.out.println(e.getMessage());
+                e.printStackTrace();
             }
         }
     }

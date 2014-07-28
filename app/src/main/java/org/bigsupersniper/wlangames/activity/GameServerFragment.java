@@ -24,7 +24,10 @@ import android.os.Handler;
 
 import org.bigsupersniper.wlangames.R;
 import org.bigsupersniper.wlangames.socket.HandlerWhats;
+import org.bigsupersniper.wlangames.socket.OnSocketClientListener;
+import org.bigsupersniper.wlangames.socket.OnSocketServerListener;
 import org.bigsupersniper.wlangames.socket.SocketClient;
+import org.bigsupersniper.wlangames.socket.SocketCmd;
 import org.bigsupersniper.wlangames.socket.SocketMessage;
 import org.bigsupersniper.wlangames.socket.SocketServer;
 import org.bigsupersniper.wlangames.socket.SocketUtils;
@@ -65,6 +68,23 @@ public class GameServerFragment extends Fragment{
         int i = wifiInfo.getIpAddress();
         return (i & 0xFF) + "." + ((i >> 8) & 0xFF) + "." + ((i >> 16) & 0xFF) + "." + ((i >> 24) & 0xFF);
     }
+
+    private OnSocketServerListener onSocketServerListener = new OnSocketServerListener() {
+        @Override
+        public void onBind() {
+
+        }
+
+        @Override
+        public void onAccept(SocketClient client) {
+
+        }
+
+        @Override
+        public void onBroadcast() {
+
+        }
+    };
 
     private void initServerView(View view){
         context = view.getContext();
@@ -125,10 +145,37 @@ public class GameServerFragment extends Fragment{
                     }
                     tvDesc.setText(desc);
                 }
-
             }
         });
     }
+
+    private OnSocketClientListener onSocketClientListener = new OnSocketClientListener() {
+        @Override
+        public void onConnected() {
+
+        }
+
+        @Override
+        public void onDisconnected() {
+
+        }
+
+        @Override
+        public void onRead(SocketMessage msg) {
+            System.out.println("onRead : " + msg.getCmd() + " : " + msg.getBody());
+            if (msg.getCmd().equals(SocketCmd.BluffDice)) {
+                Message message = new Message();
+                message.what = HandlerWhats.Receive;
+                message.obj = msg;
+                handler.sendMessage(message);
+            }
+        }
+
+        @Override
+        public void onSend(SocketMessage msg) {
+
+        }
+    };
 
     private void initClientView(View view){
         etServerIp = (EditText) view.findViewById(R.id.etServerIP);
@@ -146,18 +193,8 @@ public class GameServerFragment extends Fragment{
                         public void run() {
                             try {
                                 socketClient = new SocketClient();
-                                socketClient.setOnReadListener(new SocketClient.OnReadListener() {
-                                    @Override
-                                    public void onRead(SocketMessage msg) {
-                                        System.out.println("onRead : " + msg.getCmd() + " : " + msg.getBody());
-                                        if (msg.getCmd().equals(SocketUtils.Cmd_BluffDice)) {
-                                            Message message = new Message();
-                                            message.what = HandlerWhats.Receive;
-                                            message.obj = msg;
-                                            handler.sendMessage(message);
-                                        }
-                                    }
-                                });
+                                socketClient.setOnSocketListener(onSocketClientListener);
+
                                 String ip = etServerIp.getText().toString();
                                 int port = Integer.parseInt(etServerPort.getText().toString());
                                 if (port < 1024) {
@@ -203,7 +240,7 @@ public class GameServerFragment extends Fragment{
                 SocketMessage smg = (SocketMessage)msg.obj;
                 FragmentTransaction transaction = getFragmentManager().beginTransaction();
                 Fragment fragment = null;
-                if (smg.getCmd().equals(SocketUtils.Cmd_BluffDice)){
+                if (smg.getCmd().equals(SocketCmd.BluffDice)){
                     fragment = getFragmentManager().findFragmentByTag("BluffDiceFragment");
                     TextView textView = (TextView)fragment.getView().findViewById(R.id.textView);
                     textView.setText(smg.getBody());

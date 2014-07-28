@@ -1,16 +1,23 @@
 package org.bigsupersniper.wlangames.socket;
 
+import com.google.gson.Gson;
+
+import org.bigsupersniper.wlangames.common.BluffDice;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
+import java.util.Iterator;
+import java.util.List;
 
 public class SocketServer {
 
-    private ServerSocketChannel channel = null;
-    private Thread acceptThread = null;
-    private String localIP = null;
-    private boolean started = false;
-    private SocketChannelPool channelPool = null;
+    private ServerSocketChannel channel ;
+    private Thread acceptThread ;
+    private String localIP ;
+    private boolean started ;
+    private SocketChannelPool channelPool ;
+    private OnSocketServerListener onSocketServerListener;
 
     public SocketServer(){
         try {
@@ -21,6 +28,10 @@ public class SocketServer {
         }
     }
 
+    public void setOnSocketServerListener(OnSocketServerListener onSocketServerListener){
+        this.onSocketServerListener = onSocketServerListener;
+    }
+
     /**
      *
      * @param ip
@@ -28,6 +39,7 @@ public class SocketServer {
      * @param backlog
      */
     public void bind(String ip , int port , int backlog){
+
         try {
             channel.socket().bind(new InetSocketAddress(ip , port) , backlog);
             started = true;
@@ -40,12 +52,12 @@ public class SocketServer {
                             SocketClient client = new SocketClient(channel.accept());
                             SocketMessage msg = new SocketMessage();
                             msg.setFrom(localIP);
-                            msg.setTo(client.getRemoteIP());
-                            msg.setCmd("connect");
+                            msg.setTo(client.getLocalIP());
+                            msg.setCmd(SocketCmd.Connected);
                             msg.setBody("欢迎 :" + msg.getTo());
                             client.send(msg);
                             channelPool.add(client);
-                            client.beginRead();
+                            client.openRead();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -54,7 +66,7 @@ public class SocketServer {
             });
             acceptThread.start();
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -72,7 +84,7 @@ public class SocketServer {
                 try {
                     channel.close();
                 } catch (IOException e) {
-                    System.out.println(e.getMessage());
+                    e.printStackTrace();
                 }
             }
         }
@@ -80,9 +92,32 @@ public class SocketServer {
 
     public void broadcast(int whatMsg){
         if (this.started){
-            SocketMessage msg = new SocketMessage();
-            msg.setFrom(this.localIP);
-            this.channelPool.foreach(whatMsg , msg);
+            Object lock = channelPool.getLock();
+            synchronized (lock){
+                List<SocketClient> pool = channelPool.getList();
+                if (pool.size() > 0){
+                    SocketMessage msg = new SocketMessage();
+                    msg.setFrom(this.localIP);
+                    Iterator<SocketClient> iterator = pool.iterator();
+                    while (iterator.hasNext()){
+                        SocketClient client = iterator.next();
+                        msg.setTo(client.getLocalIP());
+                        if(whatMsg == HandlerWhats.Broadcast_BluffDice){
+                            msg.setCmd(SocketCmd.BluffDice);
+                            msg.setBody(new Gson().toJson(BluffDice.shake()));
+                        }else if (whatMsg == HandlerWhats.Broadcast_CPoker){
+                            msg.setCmd(SocketCmd.CPoker);
+                            //msg.setBody(new Gson().toJson(BluffDice.shake()));
+                        }
+
+                        client.send(msg);
+                    }
+                }
+            }
+
+            this.onSocketServerListener.onBind();
         }
     }
+
+
 }
