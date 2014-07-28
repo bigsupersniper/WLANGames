@@ -88,82 +88,11 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="left|top"
-        android:id="@+id/relativeLayout2"
-        android:layout_below="@+id/relativeLayout1"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="25dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="服务端指令"
-            android:id="@+id/textView11"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:textSize="21dp"
-            android:textColor="#ff16afff" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="开始下一局"
-            android:id="@+id/btnNext"
-            android:layout_alignBottom="@+id/radioGroup"
-            android:layout_toRightOf="@+id/radioGroup"
-            android:layout_marginLeft="30dp"
-            android:enabled="false" />
-
-        <RadioGroup
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_below="@+id/textView11"
-            android:id="@+id/radioGroup"
-            android:layout_marginTop="15dp"
-            android:layout_marginLeft="10dp">
-
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="大话骰"
-                android:id="@+id/rbDice"
-                android:checked="true" />
-
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="十三水"
-                android:id="@+id/rbPoker"
-                android:checked="false" />
-        </RadioGroup>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:id="@+id/tvDesc"
-            android:layout_below="@+id/radioGroup"
-            android:layout_marginTop="10dp"
-            android:textColor="#ff07a8ff"
-            android:text="双方都是asdas对方"
-            android:layout_marginLeft="10dp"
-            android:singleLine="false" />
-
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="left|top"
         android:id="@+id/relativeLayout3"
-        android:layout_below="@+id/relativeLayout2"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="45dp">
+        android:layout_marginTop="45dp"
+        android:layout_below="@+id/relativeLayout1">
 
         <EditText
             android:layout_width="wrap_content"

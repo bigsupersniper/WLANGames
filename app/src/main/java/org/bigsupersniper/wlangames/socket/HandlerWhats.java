@@ -11,6 +11,6 @@ public final class HandlerWhats {
     public final static int Broadcast_BluffDice = 2;
     public final static int Broadcast_CPoker = 3;
 
-    public final static int Receive = 10;
+    public final static int ReadMessage = 10;
 
 }

@@ -12,10 +12,9 @@ import java.util.List;
 
 public class SocketServer {
 
-    private ServerSocketChannel channel ;
-    private Thread acceptThread ;
     private String localIP ;
-    private boolean started ;
+    private boolean isStarted ;
+    private ServerSocketChannel channel ;
     private SocketChannelPool channelPool ;
     private OnSocketServerListener onSocketServerListener;
 
@@ -32,6 +31,27 @@ public class SocketServer {
         this.onSocketServerListener = onSocketServerListener;
     }
 
+    private Runnable acceptRunnable = new Runnable() {
+        @Override
+        public void run() {
+            while (isStarted){
+                try {
+                    SocketClient client = new SocketClient(channel.accept());
+                    SocketMessage msg = new SocketMessage();
+                    msg.setFrom(localIP);
+                    msg.setTo(client.getLocalIP());
+                    msg.setCmd(SocketCmd.Connected);
+                    msg.setBody("欢迎 :" + msg.getTo());
+                    client.send(msg);
+                    channelPool.add(client);
+                    client.openRead();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    };
+
     /**
      *
      * @param ip
@@ -39,47 +59,23 @@ public class SocketServer {
      * @param backlog
      */
     public void bind(String ip , int port , int backlog){
-
         try {
             channel.socket().bind(new InetSocketAddress(ip , port) , backlog);
-            started = true;
+            isStarted = true;
             localIP = ip + ":" + port;
-            acceptThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (started){
-                        try {
-                            SocketClient client = new SocketClient(channel.accept());
-                            SocketMessage msg = new SocketMessage();
-                            msg.setFrom(localIP);
-                            msg.setTo(client.getLocalIP());
-                            msg.setCmd(SocketCmd.Connected);
-                            msg.setBody("欢迎 :" + msg.getTo());
-                            client.send(msg);
-                            channelPool.add(client);
-                            client.openRead();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            });
-            acceptThread.start();
+            new Thread(acceptRunnable).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public boolean isStarted(){
-        return this.started;
+    public synchronized boolean isStarted(){
+        return this.isStarted;
     }
 
-    public void stop(){
-        if (this.started){
-            this.started = false;
-            if (acceptThread.isAlive()){
-                acceptThread.interrupt();
-            }
+    public synchronized void stop(){
+        if (this.isStarted){
+            this.isStarted = false;
             if(channel.isOpen()){
                 try {
                     channel.close();
@@ -91,7 +87,7 @@ public class SocketServer {
     }
 
     public void broadcast(int whatMsg){
-        if (this.started){
+        if (this.isStarted){
             Object lock = channelPool.getLock();
             synchronized (lock){
                 List<SocketClient> pool = channelPool.getList();
@@ -118,6 +114,5 @@ public class SocketServer {
             this.onSocketServerListener.onBind();
         }
     }
-
 
 }

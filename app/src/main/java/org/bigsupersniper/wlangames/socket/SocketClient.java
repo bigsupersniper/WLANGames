@@ -16,7 +16,6 @@ public class SocketClient {
     private Selector selector;
     private ByteBuffer readBuffer;
     private ByteBuffer sendBuffer;
-    private Thread readThread ;
     private String localIP;
     private OnSocketClientListener onSocketListener;
 
@@ -58,69 +57,72 @@ public class SocketClient {
         }
     }
 
-    public void openRead(){
-        if (this.connected){
-            if (readThread == null){
-                readThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        while (channel.isConnected()) {
-                            try {
-                                if (selector.select() == 0) continue;
+    private Runnable readRunnable = new Runnable() {
+        @Override
+        public void run() {
+            while (channel.isConnected()) {
+                try {
+                    if (selector.select() == 0) continue;
 
-                                SocketChannel sc;
-                                StringBuilder sb = new StringBuilder();
-                                for (SelectionKey key : selector.selectedKeys()) {
-                                    selector.selectedKeys().remove(key);
-                                    if (key.isReadable()) {
-                                        sc = (SocketChannel) key.channel();
-                                        readBuffer.clear();
-                                        int len = 0;
-                                        while ((len = sc.read(readBuffer)) > 0) {
-                                            byte[] buffer = readBuffer.array();
-                                            if (buffer[len - 1] == SocketUtils.EndByte) {
-                                                sb.append(new String(buffer, 0,len - 1, SocketUtils.MessageCharset));
-                                                break;
-                                            } else {
-                                                sb.append(new String(buffer, 0, len, SocketUtils.MessageCharset));
-                                            }
-                                            readBuffer.clear();
-                                        }
-
-                                        if (onSocketListener != null){
-                                            SocketMessage msg = new Gson().fromJson(sb.toString(), SocketMessage.class);
-                                            onSocketListener.onRead(msg);
-                                        }
-                                    }
+                    SocketChannel sc;
+                    StringBuilder sb = new StringBuilder();
+                    for (SelectionKey key : selector.selectedKeys()) {
+                        selector.selectedKeys().remove(key);
+                        if (key.isReadable()) {
+                            sc = (SocketChannel) key.channel();
+                            readBuffer.clear();
+                            int len = 0;
+                            while ((len = sc.read(readBuffer)) > 0) {
+                                byte[] buffer = readBuffer.array();
+                                if (buffer[len - 1] == SocketUtils.EndByte) {
+                                    sb.append(new String(buffer, 0,len - 1, SocketUtils.MessageCharset));
+                                    break;
+                                } else {
+                                    sb.append(new String(buffer, 0, len, SocketUtils.MessageCharset));
                                 }
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                break;
+                                readBuffer.clear();
+                            }
+
+                            if (onSocketListener != null){
+                                SocketMessage msg = new Gson().fromJson(sb.toString(), SocketMessage.class);
+                                onSocketListener.onRead(msg);
                             }
                         }
                     }
-                });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    break;
+                }
             }
-            readThread.start();
+        }
+    };
+
+    public void openRead(){
+        if (this.connected){
+            new Thread(readRunnable).start();
         }
     }
 
-    public void send(final SocketMessage msg){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    String json = new Gson().toJson(msg) + SocketUtils.EndChar;
-                    sendBuffer.put(json.getBytes(SocketUtils.MessageCharset));
-                    sendBuffer.flip();
-                    channel.write(sendBuffer);
-                    sendBuffer.clear();
-                    //System.out.println("send : " + json.replace(SocketUtils.EndChar, ""));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+    private SocketMessage sendMessage;
+    private Runnable sendRunnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                String json = new Gson().toJson(sendMessage) + SocketUtils.EndChar;
+                sendBuffer.put(json.getBytes(SocketUtils.MessageCharset));
+                sendBuffer.flip();
+                channel.write(sendBuffer);
+                sendBuffer.clear();
+                //System.out.println("send : " + json.replace(SocketUtils.EndChar, ""));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }).start();
+        }
+    };
+
+    public void send(SocketMessage msg){
+        this.sendMessage = msg;
+        new Thread(sendRunnable).start();
     }
 
     public boolean isConnected(){
@@ -134,10 +136,6 @@ public class SocketClient {
     public void disconnect(){
         if (this.connected){
             this.connected = false;
-            if (readThread.isAlive()){
-                readThread.interrupt();
-            }
-
             try {
                 if (selector.isOpen()){
                     selector.close();
@@ -152,4 +150,5 @@ public class SocketClient {
             }
         }
     }
+
 }

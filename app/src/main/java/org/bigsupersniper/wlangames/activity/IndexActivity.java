@@ -10,8 +10,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v4.widget.DrawerLayout;
 import android.view.View;
+import android.widget.Toast;
 
 import org.bigsupersniper.wlangames.R;
+import org.bigsupersniper.wlangames.socket.HandlerWhats;
+import org.bigsupersniper.wlangames.socket.SocketServer;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 public class IndexActivity extends Activity
@@ -105,7 +111,6 @@ public class IndexActivity extends Activity
         actionBar.setTitle(mTitle);
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         if (!mNavigationDrawerFragment.isDrawerOpen()) {
@@ -114,9 +119,32 @@ public class IndexActivity extends Activity
             // decide what to show in the action bar.
             getMenuInflater().inflate(R.menu.index, menu);
             restoreActionBar();
+            if (socketServer != null && socketServer.isStarted()){
+                menu.getItem(0).setVisible(true);
+                menu.getItem(1).setVisible(!gameServerFragment.isVisible());
+            }else{
+                menu.getItem(0).setVisible(false);
+                menu.getItem(1).setVisible(false);
+            }
             return true;
         }
         return super.onCreateOptionsMenu(menu);
+    }
+
+    private SocketServer socketServer;
+    public void setSocketServer(SocketServer socketServer){
+        this.socketServer = socketServer;
+    }
+
+    private void actionNextClick(){
+//        socketServer.broadcast(what);
+//        String desc = "";
+//        if (what == HandlerWhats.Broadcast_BluffDice){
+//            desc = "上一局 <大话骰> 开始于 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+//        }else if(what == HandlerWhats.Broadcast_CPoker) {
+//            desc = "上一局 <十三水> 开始于 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+//        }
+
     }
 
     @Override
@@ -125,10 +153,25 @@ public class IndexActivity extends Activity
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            this.finish();
-            System.exit(0);
+        switch (id){
+            case R.id.action_status:
+                if (socketServer != null && socketServer.isStarted()){
+                    Toast.makeText(this , "服务已启动", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case R.id.action_next:
+                if (bluffDiceFragment.isVisible()){
+                    Toast.makeText(this , "当前处于大话骰页面", Toast.LENGTH_SHORT).show();
+                }else if(cPokerFragment.isVisible()){
+                    Toast.makeText(this , "当前处于十三水页面", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case R.id.action_exit:
+                this.finish();
+                System.exit(0);
+                break;
         }
+
         return super.onOptionsItemSelected(item);
     }
 }

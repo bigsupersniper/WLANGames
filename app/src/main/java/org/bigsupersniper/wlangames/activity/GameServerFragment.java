@@ -11,10 +11,8 @@ import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,9 +30,6 @@ import org.bigsupersniper.wlangames.socket.SocketMessage;
 import org.bigsupersniper.wlangames.socket.SocketServer;
 import org.bigsupersniper.wlangames.socket.SocketUtils;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 
 public class GameServerFragment extends Fragment{
 
@@ -44,17 +39,12 @@ public class GameServerFragment extends Fragment{
     private Switch swServer;
     private TextView tvIP;
     private EditText etPort;
-    private RadioButton rbDice;
-    private RadioButton rbPoker;
-    private Button btnNext;
-    private TextView tvDesc;
 
     //client
     private SocketClient socketClient;
     private Switch swClient;
     private EditText etServerIp;
     private EditText etServerPort;
-
 
     public static String getIPAdress(Context mContext) {
 
@@ -93,8 +83,6 @@ public class GameServerFragment extends Fragment{
         tvIP.setText(getIPAdress(context));
         //port
         etPort = (EditText) view.findViewById(R.id.etPort);
-        //desc
-        tvDesc = (TextView) view.findViewById(R.id.tvDesc);
         //open or close service
         swServer = (Switch)view.findViewById(R.id.swServer);
         swServer.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -109,41 +97,14 @@ public class GameServerFragment extends Fragment{
                         swServer.setChecked(false);
                         return;
                     }
-                    if (!socketServer.isStarted()) {
-                        socketServer.bind(ip, port, SocketUtils.SocketPoolSize);
-                        Toast.makeText(context, "启动服务成功,最大连接数" + SocketUtils.SocketPoolSize + "个！", Toast.LENGTH_SHORT).show();
-                        etPort.setEnabled(false);
-                        btnNext.setEnabled(true);
-                    }
+                    socketServer.bind(ip, port, SocketUtils.SocketPoolSize);
+                    Toast.makeText(context, "启动服务成功,最大连接数" + SocketUtils.SocketPoolSize + "个！", Toast.LENGTH_SHORT).show();
+                    etPort.setEnabled(false);
+                    getIndexActivity().setSocketServer(socketServer);
                 } else {
                     socketServer.stop();
                     etPort.setEnabled(false);
-                    btnNext.setEnabled(true);
                     Toast.makeText(context, "停止服务成功！", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-    }
-
-    private void initCommandView(View view){
-        rbDice = (RadioButton)view.findViewById(R.id.rbDice);
-        rbPoker = (RadioButton)view.findViewById(R.id.rbPoker);
-        btnNext = (Button)view.findViewById(R.id.btnNext);
-        btnNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                int what = 0;
-                if (rbDice.isChecked())what = HandlerWhats.Broadcast_BluffDice;
-                if (rbPoker.isChecked()) what = HandlerWhats.Broadcast_CPoker;
-                if (what != 0){
-                    socketServer.broadcast(what);
-                    String desc = "";
-                    if (what == HandlerWhats.Broadcast_BluffDice){
-                        desc = "上一局 <大话骰> 开始于 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-                    }else if(what == HandlerWhats.Broadcast_CPoker) {
-                        desc = "上一局 <十三水> 开始于 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-                    }
-                    tvDesc.setText(desc);
                 }
             }
         });
@@ -165,7 +126,7 @@ public class GameServerFragment extends Fragment{
             System.out.println("onRead : " + msg.getCmd() + " : " + msg.getBody());
             if (msg.getCmd().equals(SocketCmd.BluffDice)) {
                 Message message = new Message();
-                message.what = HandlerWhats.Receive;
+                message.what = HandlerWhats.ReadMessage;
                 message.obj = msg;
                 handler.sendMessage(message);
             }
@@ -236,7 +197,7 @@ public class GameServerFragment extends Fragment{
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            if (msg.what == HandlerWhats.Receive) {
+            if (msg.what == HandlerWhats.ReadMessage) {
                 SocketMessage smg = (SocketMessage)msg.obj;
                 FragmentTransaction transaction = getFragmentManager().beginTransaction();
                 Fragment fragment = null;
@@ -255,6 +216,9 @@ public class GameServerFragment extends Fragment{
         }
     };
 
+    private IndexActivity getIndexActivity(){
+        return (IndexActivity)getActivity();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -262,7 +226,6 @@ public class GameServerFragment extends Fragment{
         View view = inflater.inflate(R.layout.fragment_game_server, container, false);
 
         this.initServerView(view);
-        this.initCommandView(view);
         this.initClientView(view);
 
         return view;
