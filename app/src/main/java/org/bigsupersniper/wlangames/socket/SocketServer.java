@@ -1,30 +1,67 @@
 package org.bigsupersniper.wlangames.socket;
 
-import com.google.gson.Gson;
-
-import org.bigsupersniper.wlangames.common.BluffDice;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class SocketServer {
 
+    private Object lock = new Object();
     private String localIP ;
     private boolean isStarted ;
     private ServerSocketChannel channel ;
     private SocketChannelPool channelPool ;
     private OnSocketServerListener onSocketServerListener;
+    private OnSocketClientListener onSocketClientListener;
 
     public SocketServer(){
-        try {
-            channel = ServerSocketChannel.open();
-            channelPool = new SocketChannelPool();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
+        channelPool = new SocketChannelPool();
+        this.onSocketServerListener = new OnSocketServerListener() {
+            @Override
+            public void onBind(boolean success) {
+
+            }
+
+            @Override
+            public void onMessage(String message) {
+
+            }
+
+            @Override
+            public void onBroadcast(List<SocketClient> clients , int what) {
+
+            }
+        };
+        this.onSocketClientListener = new OnSocketClientListener() {
+            @Override
+            public void onConnected() {
+
+            }
+
+            @Override
+            public void onDisconnected(SocketClient client) {
+                channelPool.remove(client);
+                onSocketServerListener.onMessage(client.getLocalIP() + " 已断开连接！");
+            }
+
+            @Override
+            public void onMessage(String message) {
+
+            }
+
+            @Override
+            public void onRead(SocketMessage msg) {
+
+            }
+
+            @Override
+            public void onSend(SocketMessage msg) {
+
+            }
+        };
     }
 
     public void setOnSocketServerListener(OnSocketServerListener onSocketServerListener){
@@ -40,11 +77,20 @@ public class SocketServer {
                     SocketMessage msg = new SocketMessage();
                     msg.setFrom(localIP);
                     msg.setTo(client.getLocalIP());
-                    msg.setCmd(SocketCmd.Connected);
-                    msg.setBody("欢迎 :" + msg.getTo());
-                    client.send(msg);
-                    channelPool.add(client);
-                    client.openRead();
+
+                    if (channelPool.size() >= SocketUtils.SocketPoolSize){
+                        msg.setCmd(SocketCmd.Disconnected);
+                        msg.setBody("服务器已达最大连接数");
+                        client.send(msg);
+                        client.disconnect();
+                    }else{
+                        msg.setCmd(SocketCmd.Connected);
+                        msg.setBody("welcome :" + msg.getTo());
+                        client.send(msg);
+                        client.setOnSocketClientListener(onSocketClientListener);
+                        channelPool.add(client);
+                        client.openRead();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -60,59 +106,59 @@ public class SocketServer {
      */
     public void bind(String ip , int port , int backlog){
         try {
-            channel.socket().bind(new InetSocketAddress(ip , port) , backlog);
-            isStarted = true;
-            localIP = ip + ":" + port;
-            new Thread(acceptRunnable).start();
+            if (!isStarted){
+                channel = ServerSocketChannel.open();
+                channel.socket().bind(new InetSocketAddress(ip , port) , backlog);
+                isStarted = true;
+                localIP = ip + ":" + port;
+                new Thread(acceptRunnable).start();
+            }
+            onSocketServerListener.onBind(isStarted);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public synchronized boolean isStarted(){
+    public boolean isStarted(){
         return this.isStarted;
     }
 
-    public synchronized void stop(){
-        if (this.isStarted){
-            this.isStarted = false;
-            if(channel.isOpen()){
-                try {
-                    channel.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+    public void stop(){
+        synchronized (lock){
+            if (this.isStarted){
+                this.isStarted = false;
+                if(channel.isOpen()){
+                    try {
+                        channel.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
     }
 
-    public void broadcast(int whatMsg){
+    public String getLocalIP(){
+        return localIP;
+    }
+
+    public void broadcast(int what){
         if (this.isStarted){
-            Object lock = channelPool.getLock();
-            synchronized (lock){
-                List<SocketClient> pool = channelPool.getList();
-                if (pool.size() > 0){
-                    SocketMessage msg = new SocketMessage();
-                    msg.setFrom(this.localIP);
-                    Iterator<SocketClient> iterator = pool.iterator();
-                    while (iterator.hasNext()){
-                        SocketClient client = iterator.next();
-                        msg.setTo(client.getLocalIP());
-                        if(whatMsg == HandlerWhats.Broadcast_BluffDice){
-                            msg.setCmd(SocketCmd.BluffDice);
-                            msg.setBody(new Gson().toJson(BluffDice.shake()));
-                        }else if (whatMsg == HandlerWhats.Broadcast_CPoker){
-                            msg.setCmd(SocketCmd.CPoker);
-                            //msg.setBody(new Gson().toJson(BluffDice.shake()));
-                        }
-
-                        client.send(msg);
-                    }
-                }
-            }
-
-            this.onSocketServerListener.onBind();
+            onSocketServerListener.onBroadcast(channelPool.getList() , what);
         }
+    }
+
+    public String[] getList(){
+        List<String> ips = new ArrayList<String>();
+        if (channelPool.size() > 0){
+            Iterator<SocketClient> iterator = channelPool.getList().iterator();
+            while (iterator.hasNext()){
+                SocketClient client = iterator.next();
+                ips.add(client.getLocalIP());
+            }
+        }
+
+        return ips.toArray(new String[0]);
     }
 
 }

@@ -23,6 +23,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 import org.bigsupersniper.wlangames.R;
+import org.bigsupersniper.wlangames.common.FragmentTags;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -93,9 +94,9 @@ public class NavigationDrawerFragment extends Fragment {
         BluffDiceFragment bluffDiceFragment = new BluffDiceFragment();
         CPokerFragment cPokerFragment = new CPokerFragment();
 
-        transaction.add(R.id.container, gameServerFragment , "GameServerFragment");
-        transaction.add(R.id.container , bluffDiceFragment, "BluffDiceFragment");
-        transaction.add(R.id.container , cPokerFragment, "CPokerFragment");
+        transaction.add(R.id.container, gameServerFragment , FragmentTags.GameServer);
+        transaction.add(R.id.container , bluffDiceFragment, FragmentTags.BluffDice);
+        transaction.add(R.id.container , cPokerFragment, FragmentTags.CPoker);
         transaction.hide(gameServerFragment);
         transaction.hide(bluffDiceFragment);
         transaction.hide(cPokerFragment);

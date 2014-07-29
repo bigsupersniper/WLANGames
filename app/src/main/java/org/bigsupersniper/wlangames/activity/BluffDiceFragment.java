@@ -17,8 +17,6 @@ public class BluffDiceFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bluff_dice, container, false);
-        TextView textView = (TextView)view.findViewById(R.id.textView);
-        textView.setText(new Date().getTime() + "");
 
         return view;
     }

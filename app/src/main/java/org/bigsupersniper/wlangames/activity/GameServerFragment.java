@@ -6,7 +6,6 @@ import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.os.Looper;
 import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,12 +15,14 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-
-
 import android.os.Handler;
 
+import com.google.gson.Gson;
+
 import org.bigsupersniper.wlangames.R;
-import org.bigsupersniper.wlangames.socket.HandlerWhats;
+import org.bigsupersniper.wlangames.common.BluffDice;
+import org.bigsupersniper.wlangames.common.FragmentTags;
+import org.bigsupersniper.wlangames.common.SendWhats;
 import org.bigsupersniper.wlangames.socket.OnSocketClientListener;
 import org.bigsupersniper.wlangames.socket.OnSocketServerListener;
 import org.bigsupersniper.wlangames.socket.SocketClient;
@@ -30,10 +31,15 @@ import org.bigsupersniper.wlangames.socket.SocketMessage;
 import org.bigsupersniper.wlangames.socket.SocketServer;
 import org.bigsupersniper.wlangames.socket.SocketUtils;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
 
 public class GameServerFragment extends Fragment{
 
-    private Context context;
     //server
     private SocketServer socketServer;
     private Switch swServer;
@@ -61,26 +67,60 @@ public class GameServerFragment extends Fragment{
 
     private OnSocketServerListener onSocketServerListener = new OnSocketServerListener() {
         @Override
-        public void onBind() {
-
+        public void onBind(boolean success) {
+            String message = "";
+            if (success){
+                message = "启动服务成功,最大连接数" + SocketUtils.SocketPoolSize + "个！";
+                etPort.setEnabled(false);
+                getIndexActivity().setSocketServer(socketServer);
+            }else{
+                message = "启动服务失败，端口已绑定！";
+            }
+            Toast.makeText(getActivity(), message , Toast.LENGTH_SHORT).show();
         }
 
         @Override
-        public void onAccept(SocketClient client) {
-
+        public void onMessage(String message) {
+            sendMessage(SendWhats.Toast_ShowMessage , message);
         }
 
         @Override
-        public void onBroadcast() {
+        public void onBroadcast(List<SocketClient> clients , int what) {
+            String message = "";
+            if (clients.size() > 0){
+                SocketMessage msg = new SocketMessage();
+                msg.setFrom(socketServer.getLocalIP());
+                Iterator<SocketClient> iterator = clients.iterator();
+                while (iterator.hasNext()){
+                    SocketClient client = iterator.next();
+                    msg.setTo(client.getLocalIP());
+                    if(what == SendWhats.Broadcast_BluffDice){
+                        msg.setCmd(SocketCmd.BluffDice);
+                        msg.setBody(new Gson().toJson(BluffDice.shake()));
+                    }else if (what == SendWhats.Broadcast_CPoker){
+                        msg.setCmd(SocketCmd.CPoker);
+                        //msg.setBody(new Gson().toJson(BluffDice.shake()));
+                    }
 
+                    client.send(msg);
+                }
+                if(what == SendWhats.Broadcast_BluffDice){
+                    message = "本局 <大话骰> 开始于 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                }else if (what == SendWhats.Broadcast_CPoker){
+                    message = "本局 <十三水> 开始于 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                }
+            }else {
+                message = "没有已链接的客户端！";
+            }
+
+            sendMessage(SendWhats.Toast_ShowMessage , message);
         }
     };
 
     private void initServerView(View view){
-        context = view.getContext();
         //ip
         tvIP = (TextView) view.findViewById(R.id.tvIP);
-        tvIP.setText(getIPAdress(context));
+        tvIP.setText(getIPAdress(getActivity()));
         //port
         etPort = (EditText) view.findViewById(R.id.etPort);
         //open or close service
@@ -93,42 +133,47 @@ public class GameServerFragment extends Fragment{
                     String ip = tvIP.getText().toString();
                     int port = Integer.parseInt(etPort.getText().toString());
                     if (port < 1024) {
-                        Toast.makeText(context, "监听端口必须大于1024！", Toast.LENGTH_SHORT).show();
                         swServer.setChecked(false);
+                        sendMessage(SendWhats.Toast_ShowMessage, "监听端口必须大于1024！");
                         return;
                     }
+                    socketServer.setOnSocketServerListener(onSocketServerListener);
                     socketServer.bind(ip, port, SocketUtils.SocketPoolSize);
-                    Toast.makeText(context, "启动服务成功,最大连接数" + SocketUtils.SocketPoolSize + "个！", Toast.LENGTH_SHORT).show();
-                    etPort.setEnabled(false);
-                    getIndexActivity().setSocketServer(socketServer);
                 } else {
                     socketServer.stop();
                     etPort.setEnabled(false);
-                    Toast.makeText(context, "停止服务成功！", Toast.LENGTH_SHORT).show();
+                    sendMessage(SendWhats.Toast_ShowMessage, "停止服务成功！");
                 }
             }
         });
     }
 
     private OnSocketClientListener onSocketClientListener = new OnSocketClientListener() {
+
         @Override
         public void onConnected() {
-
+            sendMessage(SendWhats.Client_Connected, null);
         }
 
         @Override
-        public void onDisconnected() {
+        public void onDisconnected(SocketClient client) {
+            etServerIp.setEnabled(true);
+            etServerPort.setEnabled(true);
+            swClient.setChecked(false);
+            sendMessage(SendWhats.Toast_ShowMessage, "已从服务器断开连接！");
+        }
+
+        @Override
+        public void onMessage(String message) {
 
         }
 
         @Override
         public void onRead(SocketMessage msg) {
-            System.out.println("onRead : " + msg.getCmd() + " : " + msg.getBody());
-            if (msg.getCmd().equals(SocketCmd.BluffDice)) {
-                Message message = new Message();
-                message.what = HandlerWhats.ReadMessage;
-                message.obj = msg;
-                handler.sendMessage(message);
+            if (msg.getCmd().equals(SocketCmd.BluffDice) || msg.getCmd().equals(SocketCmd.CPoker)) {
+                sendMessage(SendWhats.Client_ReadMessage, msg);
+            }else if (msg.getCmd().equals(SocketCmd.Disconnected)){
+                sendMessage(SendWhats.Toast_ShowMessage, msg.getBody());
             }
         }
 
@@ -137,6 +182,13 @@ public class GameServerFragment extends Fragment{
 
         }
     };
+
+    private void sendMessage(int what , Object obj){
+        Message msg = new Message();
+        msg.what = what;
+        msg.obj = obj;
+        handler.sendMessage(msg);
+    }
 
     private void initClientView(View view){
         etServerIp = (EditText) view.findViewById(R.id.etServerIP);
@@ -149,82 +201,76 @@ public class GameServerFragment extends Fragment{
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if (b) {
+                    final String ip = etServerIp.getText().toString();
+                    final int port = Integer.parseInt(etServerPort.getText().toString());
+                    if (port < 1024) {
+                        sendMessage(SendWhats.Toast_ShowMessage , "服务端口必须大于1024！");
+                        swClient.setChecked(false);
+                        return ;
+                    }
                     new Thread(new Runnable(){
                         @Override
                         public void run() {
                             try {
                                 socketClient = new SocketClient();
-                                socketClient.setOnSocketListener(onSocketClientListener);
-
-                                String ip = etServerIp.getText().toString();
-                                int port = Integer.parseInt(etServerPort.getText().toString());
-                                if (port < 1024) {
-                                    showMessage("服务端口必须大于1024！");
-                                    swClient.setChecked(false);
-                                    return ;
-                                }
-                                if (!socketClient.isConnected()) {
-                                    socketClient.connect(ip, port);
-                                    showMessage("连接服务器成功！");
-                                    etServerIp.setEnabled(false);
-                                    etServerPort.setEnabled(false);
-                                }
+                                socketClient.setOnSocketClientListener(onSocketClientListener);
+                                socketClient.connect(ip, port);
                             }catch (Exception e){
-                                System.out.println(e.getMessage());
+                                e.printStackTrace();
                             }
                         }
                     }).start();
                 } else {
                     socketClient.disconnect();
-                    etServerIp.setEnabled(true);
-                    etServerPort.setEnabled(true);
-                    showMessage("断开服务器连接成功！");
                 }
             }
         });
     }
 
-    /**
-     * 子线程直接调用Toast会报错，必须如下实现
-     * @param message
-     */
-    public void showMessage(String message){
-        Looper.prepare();
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-        Looper.loop();
+    private IndexActivity getIndexActivity(){
+        return (IndexActivity)getActivity();
     }
 
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            if (msg.what == HandlerWhats.ReadMessage) {
-                SocketMessage smg = (SocketMessage)msg.obj;
-                FragmentTransaction transaction = getFragmentManager().beginTransaction();
-                Fragment fragment = null;
-                if (smg.getCmd().equals(SocketCmd.BluffDice)){
-                    fragment = getFragmentManager().findFragmentByTag("BluffDiceFragment");
-                    TextView textView = (TextView)fragment.getView().findViewById(R.id.textView);
-                    textView.setText(smg.getBody());
-                }
-                if (fragment != null){
-                    IndexActivity indexActivity = (IndexActivity)getActivity();
-                    indexActivity.hideAllFragments(transaction);
-                    transaction.show(fragment);
-                    transaction.commit();
-                }
+            switch (msg.what){
+                case SendWhats.Toast_ShowMessage:
+                    //子线程直接调用Toast会报错
+                    Toast.makeText(getActivity() , msg.obj.toString() , Toast.LENGTH_SHORT).show();
+                    break;
+                case SendWhats.Client_Connected:
+                    etServerIp.setEnabled(false);
+                    etServerPort.setEnabled(false);
+                    Toast.makeText(getActivity() , "连接服务器成功！" , Toast.LENGTH_SHORT).show();
+                    break;
+                case SendWhats.Client_ReadMessage:
+                    if (msg.obj != null) {
+                        SocketMessage smg = (SocketMessage) msg.obj;
+                        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                        Fragment fragment = null;
+                        if (smg.getCmd().equals(SocketCmd.BluffDice)) {
+                            fragment = getFragmentManager().findFragmentByTag(FragmentTags.BluffDice);
+                            TextView textView = (TextView) fragment.getView().findViewById(R.id.textView);
+                            textView.setText(smg.getBody());
+                        } else if (smg.getCmd().equals(SocketCmd.BluffDice)) {
+                            fragment = getFragmentManager().findFragmentByTag(FragmentTags.CPoker);
+                        }
+                        if (fragment != null) {
+                            getIndexActivity().hideAllFragments(transaction);
+                            transaction.show(fragment);
+                            transaction.commit();
+                        }
+                    }
+                    break;
             }
         }
     };
-
-    private IndexActivity getIndexActivity(){
-        return (IndexActivity)getActivity();
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_game_server, container, false);
-
         this.initServerView(view);
         this.initClientView(view);
 

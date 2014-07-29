@@ -4,20 +4,52 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class SocketClient {
 
+    private Object lock = new Object();
     private SocketChannel channel;
     private boolean connected = false;
+    private boolean readStarted = false;
+    private ThreadPoolExecutor sendPoolExecutor;
     private Selector selector;
     private ByteBuffer readBuffer;
     private ByteBuffer sendBuffer;
     private String localIP;
-    private OnSocketClientListener onSocketListener;
+    private OnSocketClientListener onSocketClientListener= new OnSocketClientListener() {
+        @Override
+        public void onConnected() {
+
+        }
+
+        @Override
+        public void onDisconnected(SocketClient client) {
+
+        }
+
+        @Override
+        public void onMessage(String message) {
+
+        }
+
+        @Override
+        public void onRead(SocketMessage msg) {
+
+        }
+
+        @Override
+        public void onSend(SocketMessage msg) {
+
+        }
+    };
 
     public SocketClient(){
 
@@ -28,12 +60,13 @@ public class SocketClient {
         this.init();
     }
 
-    public void setOnSocketListener(OnSocketClientListener onSocketListener){
-        this.onSocketListener = onSocketListener;
+    public void setOnSocketClientListener(OnSocketClientListener onSocketClientListener){
+        this.onSocketClientListener = onSocketClientListener;
     }
 
     private void init(){
         try {
+            sendPoolExecutor = new ThreadPoolExecutor(10 , 20 , 1 , TimeUnit.HOURS , new LinkedBlockingQueue());
             readBuffer = ByteBuffer.allocate(SocketUtils.BufferSize);
             sendBuffer = ByteBuffer.allocate(SocketUtils.BufferSize);
             selector = Selector.open();
@@ -48,10 +81,12 @@ public class SocketClient {
 
     public void connect(String ip , int port){
         try {
-            channel = SocketChannel.open();
-            channel.connect(new InetSocketAddress(ip, port));
-            this.init();
-            this.openRead();
+            if (channel == null){
+                channel = SocketChannel.open();
+                channel.connect(new InetSocketAddress(ip, port));
+                this.init();
+                this.openRead();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -83,46 +118,54 @@ public class SocketClient {
                                 readBuffer.clear();
                             }
 
-                            if (onSocketListener != null){
+                            if (sb.length() > 0) {
                                 SocketMessage msg = new Gson().fromJson(sb.toString(), SocketMessage.class);
-                                onSocketListener.onRead(msg);
+                                if (msg.getCmd().equals(SocketCmd.Connected)){
+                                    onSocketClientListener.onConnected();
+                                }else if(msg.getCmd().equals(SocketCmd.Disconnected)){
+                                    disconnect();
+                                }else{
+                                    onSocketClientListener.onRead(msg);
+                                }
+                            }else{
+                                disconnect();
+                                break;
                             }
                         }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    break;
                 }
             }
         }
     };
 
     public void openRead(){
-        if (this.connected){
-            new Thread(readRunnable).start();
+        synchronized (lock){
+            if (this.connected && !this.readStarted){
+                new Thread(readRunnable).start();
+                this.readStarted = true;
+            }
         }
     }
 
-    private SocketMessage sendMessage;
-    private Runnable sendRunnable = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                String json = new Gson().toJson(sendMessage) + SocketUtils.EndChar;
-                sendBuffer.put(json.getBytes(SocketUtils.MessageCharset));
-                sendBuffer.flip();
-                channel.write(sendBuffer);
-                sendBuffer.clear();
-                //System.out.println("send : " + json.replace(SocketUtils.EndChar, ""));
-            } catch (IOException e) {
-                e.printStackTrace();
+    public void send(final SocketMessage msg){
+        sendPoolExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String json = new Gson().toJson(msg) + SocketUtils.EndChar;
+                    sendBuffer.put(json.getBytes(SocketUtils.MessageCharset));
+                    sendBuffer.flip();
+                    channel.write(sendBuffer);
+                    sendBuffer.clear();
+                    //System.out.println("send : " + json.replace(SocketUtils.EndChar, ""));
+                    onSocketClientListener.onSend(msg);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-        }
-    };
-
-    public void send(SocketMessage msg){
-        this.sendMessage = msg;
-        new Thread(sendRunnable).start();
+        });
     }
 
     public boolean isConnected(){
@@ -134,19 +177,22 @@ public class SocketClient {
     }
 
     public void disconnect(){
-        if (this.connected){
-            this.connected = false;
-            try {
-                if (selector.isOpen()){
-                    selector.close();
+        synchronized (lock){
+            if (this.connected){
+                this.connected = false;
+                this.onSocketClientListener.onDisconnected(this);
+                try {
+                    if (channel.isConnected()){
+                        channel.socket().shutdownInput();
+                        channel.socket().shutdownOutput();
+                        channel.close();
+                    }
+                    if (selector.isOpen()){
+                        selector.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                if (channel.isConnected()){
-                    channel.socket().shutdownInput();
-                    channel.socket().shutdownOutput();
-                    channel.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
     }

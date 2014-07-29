@@ -13,11 +13,9 @@ import android.view.View;
 import android.widget.Toast;
 
 import org.bigsupersniper.wlangames.R;
-import org.bigsupersniper.wlangames.socket.HandlerWhats;
+import org.bigsupersniper.wlangames.common.FragmentTags;
+import org.bigsupersniper.wlangames.common.SendWhats;
 import org.bigsupersniper.wlangames.socket.SocketServer;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 
 public class IndexActivity extends Activity
@@ -63,13 +61,13 @@ public class IndexActivity extends Activity
     public void onNavigationDrawerItemSelected(int position) {
         FragmentManager fragmentManager = getFragmentManager();
         if (gameServerFragment == null){
-            gameServerFragment = (GameServerFragment)fragmentManager.findFragmentByTag("GameServerFragment");
+            gameServerFragment = (GameServerFragment)fragmentManager.findFragmentByTag(FragmentTags.GameServer);
         }
         if (bluffDiceFragment == null){
-            bluffDiceFragment = (BluffDiceFragment)fragmentManager.findFragmentByTag("BluffDiceFragment");
+            bluffDiceFragment = (BluffDiceFragment)fragmentManager.findFragmentByTag(FragmentTags.BluffDice);
         }
         if (cPokerFragment == null){
-            cPokerFragment = (CPokerFragment)fragmentManager.findFragmentByTag("CPokerFragment");
+            cPokerFragment = (CPokerFragment)fragmentManager.findFragmentByTag(FragmentTags.CPoker);
         }
 
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
@@ -136,17 +134,6 @@ public class IndexActivity extends Activity
         this.socketServer = socketServer;
     }
 
-    private void actionNextClick(){
-//        socketServer.broadcast(what);
-//        String desc = "";
-//        if (what == HandlerWhats.Broadcast_BluffDice){
-//            desc = "上一局 <大话骰> 开始于 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-//        }else if(what == HandlerWhats.Broadcast_CPoker) {
-//            desc = "上一局 <十三水> 开始于 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-//        }
-
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -156,14 +143,28 @@ public class IndexActivity extends Activity
         switch (id){
             case R.id.action_status:
                 if (socketServer != null && socketServer.isStarted()){
-                    Toast.makeText(this , "服务已启动", Toast.LENGTH_SHORT).show();
+                    try{
+                        String[] ips = socketServer.getList();
+                        String message = "";
+                        for (String ip : ips){
+                            message += ip + " | ";
+                        }
+                        Toast.makeText(this , message, Toast.LENGTH_SHORT).show();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
                 }
                 break;
             case R.id.action_next:
-                if (bluffDiceFragment.isVisible()){
-                    Toast.makeText(this , "当前处于大话骰页面", Toast.LENGTH_SHORT).show();
-                }else if(cPokerFragment.isVisible()){
-                    Toast.makeText(this , "当前处于十三水页面", Toast.LENGTH_SHORT).show();
+                if (socketServer != null){
+                    if (bluffDiceFragment.isVisible()){
+                        socketServer.broadcast(SendWhats.Broadcast_BluffDice);
+                    }else if(cPokerFragment.isVisible()){
+                        socketServer.broadcast(SendWhats.Broadcast_CPoker);
+                    }
+                }else{
+                    Toast.makeText(this , "服务未启动！", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.action_exit:

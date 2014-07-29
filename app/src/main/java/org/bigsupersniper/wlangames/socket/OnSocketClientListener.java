@@ -7,7 +7,9 @@ public interface OnSocketClientListener {
 
     public void onConnected();
 
-    public void onDisconnected();
+    public void onDisconnected(SocketClient client);
+
+    public void onMessage(String message);
 
     public void onRead(SocketMessage msg);
 
