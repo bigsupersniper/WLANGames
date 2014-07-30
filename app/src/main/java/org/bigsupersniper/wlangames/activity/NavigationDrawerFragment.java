@@ -101,6 +101,7 @@ public class NavigationDrawerFragment extends Fragment {
         transaction.hide(bluffDiceFragment);
         transaction.hide(cPokerFragment);
         transaction.commit();
+
     }
 
     @Override
