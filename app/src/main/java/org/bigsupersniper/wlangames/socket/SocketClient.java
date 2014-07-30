@@ -46,7 +46,7 @@ public class SocketClient {
         }
 
         @Override
-        public void onSend(SocketMessage msg) {
+        public void onSend(SocketClient client , SocketMessage msg) {
 
         }
     };
@@ -122,8 +122,6 @@ public class SocketClient {
                                 SocketMessage msg = new Gson().fromJson(sb.toString(), SocketMessage.class);
                                 if (msg.getCmd().equals(SocketCmd.Connected)){
                                     onSocketClientListener.onConnected();
-                                }else if(msg.getCmd().equals(SocketCmd.Disconnected)){
-                                    disconnect();
                                 }else{
                                     onSocketClientListener.onRead(msg);
                                 }
@@ -160,7 +158,7 @@ public class SocketClient {
                     channel.write(sendBuffer);
                     sendBuffer.clear();
                     //System.out.println("send : " + json.replace(SocketUtils.EndChar, ""));
-                    onSocketClientListener.onSend(msg);
+                    onSocketClientListener.onSend(SocketClient.this , msg);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

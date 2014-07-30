@@ -12,4 +12,6 @@ public interface OnSocketServerListener {
     public void onMessage(String message);
 
     public void onBroadcast(List<SocketClient> clients , int what);
+
+    public void onStop(List<SocketClient> clients);
 }

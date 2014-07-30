@@ -9,9 +9,20 @@
     tools:context="org.bigsupersniper.wlangames.activity.BluffDiceFragment">
 
     <TextView
-        android:text="十三水"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/textView" />
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="未开始游戏"
+        android:id="@+id/tvCPokerDesc"
+        android:textSize="16dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:id="@+id/tvCPokerCount"
+        android:layout_below="@+id/tvCPokerDesc"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>

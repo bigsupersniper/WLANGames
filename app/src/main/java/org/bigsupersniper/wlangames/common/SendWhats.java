@@ -26,8 +26,13 @@ public final class SendWhats {
     public final static  int Client_Connected = 20;
 
     /**
+     * 客户端连接后操作
+     */
+    public final static  int Client_Disconnected = 21;
+
+    /**
      * 客户端读取后操作
      */
-    public final static int Client_ReadMessage = 21;
+    public final static int Client_ReadMessage = 22;
 
 }

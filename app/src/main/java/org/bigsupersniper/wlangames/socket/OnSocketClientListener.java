@@ -13,5 +13,5 @@ public interface OnSocketClientListener {
 
     public void onRead(SocketMessage msg);
 
-    public void onSend(SocketMessage msg);
+    public void onSend(SocketClient client , SocketMessage msg);
 }

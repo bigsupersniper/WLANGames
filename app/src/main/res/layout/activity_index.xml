@@ -24,7 +24,7 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="WLAN Games"
-                android:id="@+id/textView"
+                android:id="@+id/tvDiceCount"
                 android:layout_gravity="center"
                 android:layout_centerVertical="true"
                 android:layout_centerHorizontal="true"
@@ -35,8 +35,8 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:text="© LINFENG 2014"
-                android:id="@+id/textView2"
-                android:layout_below="@+id/textView"
+                android:id="@+id/tvDiceDesc"
+                android:layout_below="@+id/tvDiceCount"
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="8dp" />
         </RelativeLayout>

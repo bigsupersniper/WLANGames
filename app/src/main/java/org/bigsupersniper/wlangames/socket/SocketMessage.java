@@ -14,7 +14,7 @@ public class SocketMessage {
     @SerializedName("cmd")
     private String cmd;
     @SerializedName("body")
-    private String body;
+    private String body = "";
 
     public String getFrom() {
         return from;

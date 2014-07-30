@@ -3,6 +3,7 @@ package org.bigsupersniper.wlangames.activity;
 import android.app.Activity;
 
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
@@ -16,6 +17,9 @@ import org.bigsupersniper.wlangames.R;
 import org.bigsupersniper.wlangames.common.FragmentTags;
 import org.bigsupersniper.wlangames.common.SendWhats;
 import org.bigsupersniper.wlangames.socket.SocketServer;
+import org.bigsupersniper.wlangames.socket.SocketUtils;
+
+import java.util.Arrays;
 
 
 public class IndexActivity extends Activity
@@ -143,17 +147,14 @@ public class IndexActivity extends Activity
         switch (id){
             case R.id.action_status:
                 if (socketServer != null && socketServer.isStarted()){
-                    try{
-                        String[] ips = socketServer.getList();
-                        String message = "";
-                        for (String ip : ips){
-                            message += ip + " | ";
-                        }
-                        Toast.makeText(this , message, Toast.LENGTH_SHORT).show();
-                    }catch (Exception e){
-                        e.printStackTrace();
+                    String[] ips = socketServer.getList();
+                    String[] items = new String[ips.length + 1];
+                    if (ips.length > 0){
+                        new AlertDialog.Builder(this).setTitle("在线客户端列表").setItems(ips, null)
+                                .setNegativeButton("确定", null).show();
+                    }else {
+                        Toast.makeText(this , "没有已连接的客户端！", Toast.LENGTH_SHORT).show();
                     }
-
                 }
                 break;
             case R.id.action_next:

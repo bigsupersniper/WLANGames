@@ -20,8 +20,8 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="地址："
-            android:id="@+id/textView"
-            android:layout_below="@+id/textView2"
+            android:id="@+id/tvDiceCount"
+            android:layout_below="@+id/tvDiceDesc"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_marginTop="15dp"
@@ -32,8 +32,8 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:id="@+id/tvIP"
-            android:layout_alignTop="@+id/textView"
-            android:layout_toRightOf="@+id/textView"
+            android:layout_alignTop="@+id/tvDiceCount"
+            android:layout_toRightOf="@+id/tvDiceCount"
             android:layout_marginLeft="8dp" />
 
         <TextView
@@ -42,9 +42,9 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="端口："
             android:id="@+id/textView3"
-            android:layout_below="@+id/textView"
-            android:layout_alignLeft="@+id/textView"
-            android:layout_alignStart="@+id/textView"
+            android:layout_below="@+id/tvDiceCount"
+            android:layout_alignLeft="@+id/tvDiceCount"
+            android:layout_alignStart="@+id/tvDiceCount"
             android:layout_marginTop="15dp" />
 
         <EditText
@@ -63,7 +63,7 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="服务端设置"
-            android:id="@+id/textView2"
+            android:id="@+id/tvDiceDesc"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"

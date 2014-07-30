@@ -34,6 +34,11 @@ public class SocketServer {
             public void onBroadcast(List<SocketClient> clients , int what) {
 
             }
+
+            @Override
+            public void onStop(List<SocketClient> clients) {
+
+            }
         };
         this.onSocketClientListener = new OnSocketClientListener() {
             @Override
@@ -43,8 +48,10 @@ public class SocketServer {
 
             @Override
             public void onDisconnected(SocketClient client) {
-                channelPool.remove(client);
-                onSocketServerListener.onMessage(client.getLocalIP() + " 已断开连接！");
+                if (isStarted){
+                    channelPool.remove(client);
+                    onSocketServerListener.onMessage(client.getLocalIP() + " 已断开连接！");
+                }
             }
 
             @Override
@@ -58,8 +65,11 @@ public class SocketServer {
             }
 
             @Override
-            public void onSend(SocketMessage msg) {
-
+            public void onSend(SocketClient client , SocketMessage msg) {
+                if(msg.getCmd().equals(SocketCmd.Disconnected)){
+                    client.disconnect();
+                }
+                System.out.println(msg.getTo() + " : " + msg.getBody());
             }
         };
     }
@@ -82,7 +92,6 @@ public class SocketServer {
                         msg.setCmd(SocketCmd.Disconnected);
                         msg.setBody("服务器已达最大连接数");
                         client.send(msg);
-                        client.disconnect();
                     }else{
                         msg.setCmd(SocketCmd.Connected);
                         msg.setBody("welcome :" + msg.getTo());
@@ -128,6 +137,7 @@ public class SocketServer {
             if (this.isStarted){
                 this.isStarted = false;
                 if(channel.isOpen()){
+                    onSocketServerListener.onStop(channelPool.getList());
                     try {
                         channel.close();
                     } catch (IOException e) {
