@@ -91,21 +91,19 @@ public class GameServerFragment extends Fragment{
         public void onBroadcast(List<SocketClient> clients , int what) {
             String message = "";
             if (clients.size() > 0){
-                SocketMessage msg = new SocketMessage();
-                msg.setFrom(socketServer.getLocalIP());
                 Iterator<SocketClient> iterator = clients.iterator();
                 if(what == SendWhats.Broadcast_BluffDice){
-                    msg.setCmd(SocketCmd.BluffDice);
-
                     while (iterator.hasNext()){
                         SocketClient client = iterator.next();
+                        SocketMessage msg = new SocketMessage();
+                        msg.setFrom(socketServer.getLocalIP());
                         msg.setTo(client.getLocalIP());
+                        msg.setCmd(SocketCmd.BluffDice);
                         msg.setBody(new Gson().toJson(BluffDice.shake()));
 
                         client.send(msg);
                     }
                 }else if (what == SendWhats.Broadcast_CPoker){
-                    msg.setCmd(SocketCmd.CPoker);
                     String[] shuffledCards = CPoker.shuffle();
                     boolean[] gones = new boolean[4];
                     Random random = new Random(new Date().getTime());
@@ -121,8 +119,10 @@ public class GameServerFragment extends Fragment{
                         while (true) {
                             if (!gones[n]) {
                                 gones[n] = true;
-
+                                SocketMessage msg = new SocketMessage();
+                                msg.setFrom(socketServer.getLocalIP());
                                 msg.setTo(client.getLocalIP());
+                                msg.setCmd(SocketCmd.CPoker);
                                 msg.setBody(new Gson().toJson(CPoker.deal(shuffledCards, n)));
                                 client.send(msg);
                                 size--;
@@ -150,14 +150,13 @@ public class GameServerFragment extends Fragment{
         @Override
         public void onStop(List<SocketClient> clients) {
             if (clients.size() > 0) {
-                SocketMessage msg = new SocketMessage();
-                msg.setFrom(socketServer.getLocalIP());
-                msg.setCmd(SocketCmd.Disconnected);
-                msg.setBody("服务器已关闭");
-
                 Iterator<SocketClient> iterator = clients.iterator();
                 while (iterator.hasNext()) {
                     SocketClient client = iterator.next();
+                    SocketMessage msg = new SocketMessage();
+                    msg.setFrom(socketServer.getLocalIP());
+                    msg.setCmd(SocketCmd.Disconnected);
+                    msg.setBody("服务器已关闭");
                     msg.setTo(client.getLocalIP());
 
                     client.send(msg);
@@ -309,7 +308,8 @@ public class GameServerFragment extends Fragment{
                             ((BluffDiceFragment)fragment).refreshDices(ids);
                         } else if (smg.getCmd().equals(SocketCmd.CPoker)) {
                             fragment = getFragmentManager().findFragmentByTag(FragmentTags.CPoker);
-                            ((CPokerFragment)fragment).refreshCards(smg.getBody());
+                            String[] cards = new Gson().fromJson(smg.getBody() , String[].class);
+                            ((CPokerFragment)fragment).refreshCards(cards);
                         }
                         if (fragment != null) {
                             if (fragment.isVisible()){

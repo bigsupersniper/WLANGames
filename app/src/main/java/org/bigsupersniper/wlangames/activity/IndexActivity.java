@@ -121,16 +121,24 @@ public class IndexActivity extends Activity
             // decide what to show in the action bar.
             getMenuInflater().inflate(R.menu.index, menu);
             restoreActionBar();
-            if (socketServer != null && socketServer.isStarted()){
-                menu.getItem(0).setVisible(true);
-                menu.getItem(1).setVisible(!gameServerFragment.isVisible());
-            }else{
-                menu.getItem(0).setVisible(false);
-                menu.getItem(1).setVisible(false);
-            }
             return true;
         }
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu){
+        if (!mNavigationDrawerFragment.isDrawerOpen()) {
+            if (socketServer != null && socketServer.isStarted()) {
+                menu.getItem(0).setVisible(true);
+                menu.getItem(1).setVisible(!gameServerFragment.isVisible());
+            } else {
+                menu.getItem(0).setVisible(false);
+                menu.getItem(1).setVisible(false);
+            }
+        }
+
+        return true;
     }
 
     private SocketServer socketServer;

@@ -69,7 +69,6 @@ public class SocketServer {
                 if(msg.getCmd().equals(SocketCmd.Disconnected)){
                     client.disconnect();
                 }
-                System.out.println(msg.getTo() + " : " + msg.getBody());
             }
         };
     }
