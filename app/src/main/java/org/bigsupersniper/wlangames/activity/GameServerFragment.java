@@ -24,6 +24,7 @@ import org.bigsupersniper.wlangames.common.BluffDice;
 import org.bigsupersniper.wlangames.common.CPoker;
 import org.bigsupersniper.wlangames.common.FragmentTags;
 import org.bigsupersniper.wlangames.common.SendWhats;
+import org.bigsupersniper.wlangames.common.WifiUtils;
 import org.bigsupersniper.wlangames.socket.OnSocketClientListener;
 import org.bigsupersniper.wlangames.socket.OnSocketServerListener;
 import org.bigsupersniper.wlangames.socket.SocketClient;
@@ -55,18 +56,6 @@ public class GameServerFragment extends Fragment{
     private EditText etServerIp;
     private EditText etServerPort;
 
-    public static String getIPAdress(Context mContext) {
-
-        //获取wifi服务
-        WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
-        //判断wifi是否开启
-        if (!wifiManager.isWifiEnabled()) {
-            wifiManager.setWifiEnabled(true);
-        }
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        int i = wifiInfo.getIpAddress();
-        return (i & 0xFF) + "." + ((i >> 8) & 0xFF) + "." + ((i >> 16) & 0xFF) + "." + ((i >> 24) & 0xFF);
-    }
 
     private OnSocketServerListener onSocketServerListener = new OnSocketServerListener() {
         @Override
@@ -166,12 +155,9 @@ public class GameServerFragment extends Fragment{
     };
 
     private void initServerView(View view){
-        //ip
         tvIP = (TextView) view.findViewById(R.id.tvIP);
-        tvIP.setText(getIPAdress(getActivity()));
-        //port
+        tvIP.setText(WifiUtils.getIPAdress(getActivity()));
         etPort = (EditText) view.findViewById(R.id.etPort);
-        //open or close service
         swServer = (Switch)view.findViewById(R.id.swServer);
         swServer.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override

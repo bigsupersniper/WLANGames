@@ -1,15 +1,14 @@
 package org.bigsupersniper.wlangames.activity;
 
-import android.app.Activity;
-
 import android.app.ActionBar;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
+import android.support.v4.widget.DrawerLayout;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.support.v4.widget.DrawerLayout;
 import android.view.View;
 import android.widget.Toast;
 
@@ -17,9 +16,6 @@ import org.bigsupersniper.wlangames.R;
 import org.bigsupersniper.wlangames.common.FragmentTags;
 import org.bigsupersniper.wlangames.common.SendWhats;
 import org.bigsupersniper.wlangames.socket.SocketServer;
-import org.bigsupersniper.wlangames.socket.SocketUtils;
-
-import java.util.Arrays;
 
 
 public class IndexActivity extends Activity
