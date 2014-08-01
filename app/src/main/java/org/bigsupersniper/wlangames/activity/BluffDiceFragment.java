@@ -6,9 +6,13 @@ import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.NumberPicker;
 import android.widget.SimpleAdapter;
+import android.widget.StackView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.bigsupersniper.wlangames.R;
 import org.bigsupersniper.wlangames.common.BluffDice;
@@ -27,7 +31,18 @@ public class BluffDiceFragment extends Fragment {
     private GridView gvDices ;
     private TextView tvDiceDesc;
     private TextView tvDiceCount;
+    private GridView gvSelect;
     private int count = 0;
+    private static List<Map<String, Integer>> stackViewList ;
+
+    static {
+        stackViewList = new ArrayList<Map<String, Integer>>();
+        for (int i = 0 ; i < 6 ; i++){
+            Map<String, Integer> map = new HashMap<String, Integer>();
+            map.put("src", BluffDice.getResId(i));
+            stackViewList.add(map);
+        }
+    }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -37,6 +52,15 @@ public class BluffDiceFragment extends Fragment {
         tvDiceDesc = (TextView)view.findViewById(R.id.tvDiceDesc);
         tvDiceCount.setText("游戏次数 : " + count + " 次");
         gvDices = (GridView)view.findViewById(R.id.gvDices);
+        gvSelect = (GridView)view.findViewById(R.id.gvSelect);
+        gvSelect.setAdapter(new SimpleAdapter(getActivity(), stackViewList , R.layout.gv_bluff_dice_item, new String[]{ "src" }, new int[]{R.id.imgDice}));
+        gvSelect.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Map<String, Integer> map = (Map<String, Integer>)adapterView.getItemAtPosition(i);
+                Toast.makeText(getActivity() , BluffDice.valueOf(map.get("src")) , Toast.LENGTH_SHORT).show();
+            }
+        });
         player = MediaPlayer.create(getActivity(), R.raw.shake);
         player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -45,6 +69,10 @@ public class BluffDiceFragment extends Fragment {
                 mediaPlayer.pause();
             }
         });
+
+        NumberPicker numberPicker = (NumberPicker)view.findViewById(R.id.numberPicker);
+        numberPicker.setMaxValue(1);
+        numberPicker.setMaxValue(20);
 
         return view;
     }
