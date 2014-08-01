@@ -1,6 +1,5 @@
 package org.bigsupersniper.wlangames.activity;
 
-import android.app.Activity;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -34,7 +33,7 @@ public class BluffDiceFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bluff_dice, container, false);
 
-        tvDiceCount = (TextView)view.findViewById(R.id.tvDiceCount);
+        tvDiceCount = (TextView)view.findViewById(R.id.textView20);
         tvDiceDesc = (TextView)view.findViewById(R.id.tvDiceDesc);
         tvDiceCount.setText("游戏次数 : " + count + " 次");
         gvDices = (GridView)view.findViewById(R.id.gvDices);
@@ -52,7 +51,7 @@ public class BluffDiceFragment extends Fragment {
 
     public void refreshDices(int[] ids){
         if (ids.length < 5) return;
-        tvDiceDesc.setText("上一局游戏时间 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        tvDiceDesc.setText("上一局游戏时间 : " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
         tvDiceCount.setText("游戏次数 : " + (++count) + " 次");
         if (!player.isPlaying()) {
             player.start();

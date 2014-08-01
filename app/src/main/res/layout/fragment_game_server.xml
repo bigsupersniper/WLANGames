@@ -19,8 +19,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="地址："
-            android:id="@+id/tvDiceCount"
+            android:text="地    址："
+            android:id="@+id/textView5"
             android:layout_below="@+id/tvDiceDesc"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
@@ -32,19 +32,19 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:id="@+id/tvIP"
-            android:layout_alignTop="@+id/tvDiceCount"
-            android:layout_toRightOf="@+id/tvDiceCount"
+            android:layout_alignTop="@+id/textView5"
+            android:layout_toRightOf="@+id/textView5"
             android:layout_marginLeft="8dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="端口："
+            android:text="端    口："
             android:id="@+id/textView3"
-            android:layout_below="@+id/tvDiceCount"
-            android:layout_alignLeft="@+id/tvDiceCount"
-            android:layout_alignStart="@+id/tvDiceCount"
+            android:layout_below="@+id/textView5"
+            android:layout_alignLeft="@+id/textView5"
+            android:layout_alignStart="@+id/textView5"
             android:layout_marginTop="15dp" />
 
         <EditText
@@ -76,11 +76,35 @@
             android:id="@+id/swServer"
             android:textOff="停止"
             android:textOn="开启"
-            android:layout_alignTop="@+id/textView3"
-            android:layout_toRightOf="@+id/etPort"
-            android:layout_marginLeft="15dp"
             android:singleLine="false"
-            android:checked="false" />
+            android:checked="false"
+            android:layout_toEndOf="@+id/etPort"
+            android:layout_toRightOf="@+id/etCount"
+            android:layout_below="@+id/etPort"
+            android:layout_marginLeft="30dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="连接数："
+            android:id="@+id/textView"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/textView3"
+            android:layout_marginTop="15dp"
+            android:layout_marginLeft="10dp" />
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/etCount"
+            android:minWidth="50dp"
+            android:text="6"
+            android:numeric="integer"
+            android:layout_below="@+id/textView3"
+            android:layout_toRightOf="@+id/textView"
+            android:layout_toEndOf="@+id/textView" />
 
     </RelativeLayout>
 
@@ -111,7 +135,7 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="地址："
             android:id="@+id/textView8"
-            android:layout_below="@+id/textView12"
+            android:layout_below="@+id/textView6"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_marginTop="15dp"
@@ -140,18 +164,6 @@
             android:textSize="21dp"
             android:textColor="#ff16afff" />
 
-        <Switch
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/swClient"
-            android:textOff="断开"
-            android:textOn="连接"
-            android:layout_alignTop="@+id/textView10"
-            android:layout_toRightOf="@+id/etServerPort"
-            android:layout_marginLeft="15dp"
-            android:singleLine="false"
-            android:checked="false" />
-
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -161,6 +173,39 @@
             android:layout_marginTop="-8dp"
             android:layout_alignTop="@+id/textView8"
             android:numeric="integer" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="昵称："
+            android:id="@+id/textView6"
+            android:layout_below="@+id/textView12"
+            android:layout_alignLeft="@+id/textView10"
+            android:layout_toStartOf="@+id/etServerPort"
+            android:layout_marginTop="15dp" />
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/etClientId"
+            android:layout_below="@+id/textView12"
+            android:layout_alignEnd="@+id/etServerIP"
+            android:layout_alignLeft="@+id/etServerPort" />
+
+        <Switch
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/swClient"
+            android:textOff="断开"
+            android:textOn="连接"
+            android:singleLine="false"
+            android:checked="false"
+            android:layout_alignWithParentIfMissing="false"
+            android:layout_alignBottom="@+id/etServerPort"
+            android:layout_toRightOf="@+id/etServerPort"
+            android:layout_toEndOf="@+id/etServerPort"
+            android:layout_marginLeft="20dp" />
 
     </RelativeLayout>
 

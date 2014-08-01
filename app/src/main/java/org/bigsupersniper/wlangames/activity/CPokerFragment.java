@@ -5,9 +5,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.GridView;
-import android.widget.SimpleAdapter;
-import android.widget.StackView;
 import android.widget.TextView;
 
 import org.bigsupersniper.wlangames.R;
@@ -63,7 +60,7 @@ public class CPokerFragment extends Fragment {
     }
 
     public void refreshCards(String[] cards){
-        tvCPokerDesc.setText("上一局游戏时间 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        tvCPokerDesc.setText("上一局游戏时间 : " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
         tvCPokerCount.setText("游戏次数 : " + (++count) + " 次");
 
         Class<R.drawable> c = R.drawable.class;

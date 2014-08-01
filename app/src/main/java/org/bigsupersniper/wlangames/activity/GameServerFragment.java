@@ -49,21 +49,23 @@ public class GameServerFragment extends Fragment{
     private Switch swServer;
     private TextView tvIP;
     private EditText etPort;
+    private EditText etCount;
 
     //client
     private SocketClient socketClient;
     private Switch swClient;
     private EditText etServerIp;
     private EditText etServerPort;
-
+    private EditText etClientId;
 
     private OnSocketServerListener onSocketServerListener = new OnSocketServerListener() {
         @Override
         public void onBind(boolean success) {
             String message = "";
             if (success){
-                message = "启动服务成功,最大连接数" + SocketUtils.SocketPoolSize + "个！";
+                message = "启动服务成功！";
                 etPort.setEnabled(false);
+                etCount.setEnabled(false);
                 getIndexActivity().setSocketServer(socketServer);
             }else{
                 message = "启动服务失败，端口已绑定！";
@@ -125,9 +127,9 @@ public class GameServerFragment extends Fragment{
                 }
 
                 if(what == SendWhats.Broadcast_BluffDice){
-                    message = "本局 <大话骰> 开始于 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                    message = "本局 <大话骰> 开始于 : " + new SimpleDateFormat("HH:mm:ss").format(new Date());
                 }else if (what == SendWhats.Broadcast_CPoker){
-                    message = "本局 <十三水> 开始于 : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                    message = "本局 <十三水> 开始于 : " + new SimpleDateFormat("HH:mm:ss").format(new Date());
                 }
             }else {
                 message = "没有已链接的客户端！";
@@ -158,6 +160,7 @@ public class GameServerFragment extends Fragment{
         tvIP = (TextView) view.findViewById(R.id.tvIP);
         tvIP.setText(WifiUtils.getIPAdress(getActivity()));
         etPort = (EditText) view.findViewById(R.id.etPort);
+        etCount = (EditText) view.findViewById(R.id.etCount);
         swServer = (Switch)view.findViewById(R.id.swServer);
         swServer.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -166,16 +169,23 @@ public class GameServerFragment extends Fragment{
                     socketServer = new SocketServer();
                     String ip = tvIP.getText().toString();
                     int port = Integer.parseInt(etPort.getText().toString());
+                    int count = Integer.parseInt(etCount.getText().toString());
+                    if (count <= 0){
+                        swServer.setChecked(false);
+                        sendMessage(SendWhats.Toast_ShowMessage, "连接数不能小于0！");
+                        return;
+                    }
                     if (port < 1024) {
                         swServer.setChecked(false);
                         sendMessage(SendWhats.Toast_ShowMessage, "监听端口必须大于1024！");
                         return;
                     }
                     socketServer.setOnSocketServerListener(onSocketServerListener);
-                    socketServer.bind(ip, port, SocketUtils.SocketPoolSize);
+                    socketServer.bind(ip, port, count);
                 } else {
                     socketServer.stop();
-                    etPort.setEnabled(false);
+                    etPort.setEnabled(true);
+                    etCount.setEnabled(true);
                     sendMessage(SendWhats.Toast_ShowMessage, "停止服务成功！");
                 }
             }
@@ -200,7 +210,7 @@ public class GameServerFragment extends Fragment{
         }
 
         @Override
-        public void onRead(SocketMessage msg) {
+        public void onRead(SocketClient client , SocketMessage msg) {
             if (msg.getCmd().equals(SocketCmd.BluffDice) || msg.getCmd().equals(SocketCmd.CPoker)) {
                 sendMessage(SendWhats.Client_ReadMessage, msg);
             }else if (msg.getCmd().equals(SocketCmd.Disconnected)){
@@ -227,7 +237,7 @@ public class GameServerFragment extends Fragment{
         etServerPort = (EditText) view.findViewById(R.id.etServerPort);
         //设置服务器ip
         etServerIp.setText(tvIP.getText().toString());
-
+        etClientId = (EditText) view.findViewById(R.id.etClientId);
         swClient = (Switch)view.findViewById(R.id.swClient);
         swClient.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -235,6 +245,12 @@ public class GameServerFragment extends Fragment{
                 if (b) {
                     final String ip = etServerIp.getText().toString();
                     final int port = Integer.parseInt(etServerPort.getText().toString());
+                    final String clientId = etClientId.getText().toString();
+                    if (clientId.equals("")) {
+                        sendMessage(SendWhats.Toast_ShowMessage , "请输入昵称！");
+                        swClient.setChecked(false);
+                        return ;
+                    }
                     if (port < 1024) {
                         sendMessage(SendWhats.Toast_ShowMessage , "服务端口必须大于1024！");
                         swClient.setChecked(false);
@@ -245,6 +261,7 @@ public class GameServerFragment extends Fragment{
                         public void run() {
                             try {
                                 socketClient = new SocketClient();
+                                socketClient.setId(clientId);
                                 socketClient.setOnSocketClientListener(onSocketClientListener);
                                 socketClient.connect(ip, port);
                             }catch (Exception e){
@@ -275,6 +292,13 @@ public class GameServerFragment extends Fragment{
                     etServerIp.setEnabled(false);
                     etServerPort.setEnabled(false);
                     Toast.makeText(getActivity() , "连接服务器成功！" , Toast.LENGTH_SHORT).show();
+                    //提交客户端Id
+                    SocketMessage sendMsg = new SocketMessage();
+                    sendMsg.setFrom(socketClient.getLocalIP());
+                    sendMsg.setTo(etServerIp.getText().toString());
+                    sendMsg.setCmd(SocketCmd.SetClientId);
+                    sendMsg.setBody(socketClient.getId());
+                    socketClient.send(sendMsg);
                     break;
                 case SendWhats.Client_Disconnected:
                     etServerIp.setEnabled(true);
@@ -284,17 +308,17 @@ public class GameServerFragment extends Fragment{
                     break;
                 case SendWhats.Client_ReadMessage:
                     if (msg.obj != null) {
-                        SocketMessage smg = (SocketMessage) msg.obj;
+                        SocketMessage readMsg = (SocketMessage) msg.obj;
                         FragmentTransaction transaction = getFragmentManager().beginTransaction();
                         getIndexActivity().hideAllFragments(transaction);
                         Fragment fragment = null;
-                        if (smg.getCmd().equals(SocketCmd.BluffDice)) {
+                        if (readMsg.getCmd().equals(SocketCmd.BluffDice)) {
                             fragment = getFragmentManager().findFragmentByTag(FragmentTags.BluffDice);
-                            int[] ids = new Gson().fromJson(smg.getBody() , int[].class);
+                            int[] ids = new Gson().fromJson(readMsg.getBody() , int[].class);
                             ((BluffDiceFragment)fragment).refreshDices(ids);
-                        } else if (smg.getCmd().equals(SocketCmd.CPoker)) {
+                        } else if (readMsg.getCmd().equals(SocketCmd.CPoker)) {
                             fragment = getFragmentManager().findFragmentByTag(FragmentTags.CPoker);
-                            String[] cards = new Gson().fromJson(smg.getBody() , String[].class);
+                            String[] cards = new Gson().fromJson(readMsg.getBody() , String[].class);
                             ((CPokerFragment)fragment).refreshCards(cards);
                         }
                         if (fragment != null) {

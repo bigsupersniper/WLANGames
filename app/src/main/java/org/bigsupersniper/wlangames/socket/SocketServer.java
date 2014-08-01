@@ -14,6 +14,7 @@ public class SocketServer {
     private boolean isStarted ;
     private ServerSocketChannel channel ;
     private SocketChannelPool channelPool ;
+    private int poolSize;
     private OnSocketServerListener onSocketServerListener;
     private OnSocketClientListener onSocketClientListener;
 
@@ -60,8 +61,10 @@ public class SocketServer {
             }
 
             @Override
-            public void onRead(SocketMessage msg) {
-
+            public void onRead(SocketClient client , SocketMessage msg) {
+                if (msg.getCmd().equals(SocketCmd.SetClientId)){
+                    client.setId(msg.getBody());
+                }
             }
 
             @Override
@@ -87,7 +90,7 @@ public class SocketServer {
                     msg.setFrom(localIP);
                     msg.setTo(client.getLocalIP());
 
-                    if (channelPool.size() >= SocketUtils.SocketPoolSize){
+                    if (channelPool.size() >= poolSize){
                         msg.setCmd(SocketCmd.Disconnected);
                         msg.setBody("服务器已达最大连接数");
                         client.send(msg);
@@ -118,6 +121,7 @@ public class SocketServer {
                 channel = ServerSocketChannel.open();
                 channel.socket().bind(new InetSocketAddress(ip , port) , backlog);
                 isStarted = true;
+                poolSize = backlog;
                 localIP = ip + ":" + port;
                 new Thread(acceptRunnable).start();
             }
@@ -129,6 +133,10 @@ public class SocketServer {
 
     public boolean isStarted(){
         return this.isStarted;
+    }
+
+    public int getPoolSize(){
+        return this.poolSize;
     }
 
     public void stop(){
@@ -163,7 +171,7 @@ public class SocketServer {
             Iterator<SocketClient> iterator = channelPool.getList().iterator();
             while (iterator.hasNext()){
                 SocketClient client = iterator.next();
-                ips.add(client.getLocalIP());
+                ips.add(client.getLocalIP() + "(" + client.getId() + ")");
             }
         }
 

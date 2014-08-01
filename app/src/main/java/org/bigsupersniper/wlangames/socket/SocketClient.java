@@ -24,6 +24,8 @@ public class SocketClient {
     private ByteBuffer readBuffer;
     private ByteBuffer sendBuffer;
     private String localIP;
+    private String id ;
+
     private OnSocketClientListener onSocketClientListener= new OnSocketClientListener() {
         @Override
         public void onConnected() {
@@ -41,7 +43,7 @@ public class SocketClient {
         }
 
         @Override
-        public void onRead(SocketMessage msg) {
+        public void onRead(SocketClient client , SocketMessage msg) {
 
         }
 
@@ -123,7 +125,7 @@ public class SocketClient {
                                 if (msg.getCmd().equals(SocketCmd.Connected)){
                                     onSocketClientListener.onConnected();
                                 }else{
-                                    onSocketClientListener.onRead(msg);
+                                    onSocketClientListener.onRead(SocketClient.this , msg);
                                 }
                             }else{
                                 disconnect();
@@ -157,7 +159,6 @@ public class SocketClient {
                     sendBuffer.flip();
                     channel.write(sendBuffer);
                     sendBuffer.clear();
-                    //System.out.println("send : " + json.replace(SocketUtils.EndChar, ""));
                     onSocketClientListener.onSend(SocketClient.this , msg);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -172,6 +173,14 @@ public class SocketClient {
 
     public String getLocalIP(){
         return this.localIP;
+    }
+
+    public void setId(String id){
+        this.id = id;
+    }
+
+    public String getId(){
+        return this.id;
     }
 
     public void disconnect(){
