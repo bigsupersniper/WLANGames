@@ -24,6 +24,7 @@ import org.bigsupersniper.wlangames.common.BluffDice;
 import org.bigsupersniper.wlangames.common.CPoker;
 import org.bigsupersniper.wlangames.common.FragmentTags;
 import org.bigsupersniper.wlangames.common.SendWhats;
+import org.bigsupersniper.wlangames.common.StringUtils;
 import org.bigsupersniper.wlangames.common.WifiUtils;
 import org.bigsupersniper.wlangames.socket.OnSocketClientListener;
 import org.bigsupersniper.wlangames.socket.OnSocketServerListener;
@@ -238,6 +239,7 @@ public class GameServerFragment extends Fragment{
         //设置服务器ip
         etServerIp.setText(tvIP.getText().toString());
         etClientId = (EditText) view.findViewById(R.id.etClientId);
+        etClientId.setText(StringUtils.getRandom(5));
         swClient = (Switch)view.findViewById(R.id.swClient);
         swClient.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
