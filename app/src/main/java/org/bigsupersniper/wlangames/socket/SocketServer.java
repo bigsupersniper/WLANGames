@@ -171,7 +171,9 @@ public class SocketServer {
             Iterator<SocketClient> iterator = channelPool.getList().iterator();
             while (iterator.hasNext()){
                 SocketClient client = iterator.next();
-                ips.add(client.getLocalIP() + "(" + client.getId() + ")");
+                String ip = client.getLocalIP();
+                String ls = ip.substring(0 , ip.lastIndexOf(":"));
+                ips.add(client.getId() + " (" + ls + ")");
             }
         }
 

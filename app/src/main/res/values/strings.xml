@@ -6,7 +6,8 @@
     <string name="title_section2">吹牛骰</string>
     <string name="title_section3">十三水</string>
     <string name="action_next">下一局</string>
-    <string name="action_status">服务状态</string>
+    <string name="action_server_status">服务状态</string>
+    <string name="action_client_status">连接状态</string>
     <string name="action_exit">退出</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

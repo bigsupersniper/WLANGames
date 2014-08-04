@@ -15,6 +15,7 @@ import android.widget.Toast;
 import org.bigsupersniper.wlangames.R;
 import org.bigsupersniper.wlangames.common.FragmentTags;
 import org.bigsupersniper.wlangames.common.SendWhats;
+import org.bigsupersniper.wlangames.socket.SocketClient;
 import org.bigsupersniper.wlangames.socket.SocketServer;
 
 
@@ -132,6 +133,12 @@ public class IndexActivity extends Activity
                 menu.getItem(0).setVisible(false);
                 menu.getItem(1).setVisible(false);
             }
+
+            if(socketClient != null){
+                menu.getItem(2).setVisible(true);
+            }else{
+                menu.getItem(2).setVisible(false);
+            }
         }
 
         return true;
@@ -142,6 +149,11 @@ public class IndexActivity extends Activity
         this.socketServer = socketServer;
     }
 
+    private SocketClient socketClient;
+    public void setSocketClient(SocketClient socketClient){
+        this.socketClient = socketClient;
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -149,15 +161,27 @@ public class IndexActivity extends Activity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id){
-            case R.id.action_status:
+            case R.id.action_server_status:
                 if (socketServer != null && socketServer.isStarted()){
                     String[] ips = socketServer.getList();
-                    String[] items = new String[ips.length + 1];
                     if (ips.length > 0){
                         new AlertDialog.Builder(this).setTitle("在线客户端列表").setItems(ips, null)
                                 .setNegativeButton("确定", null).show();
                     }else {
                         Toast.makeText(this , "没有已连接的客户端！", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                break;
+            case R.id.action_client_status:
+                if (socketClient != null){
+                    if (socketClient.isConnected()){
+                        String[] infos = new String[2];
+                        infos[0] = "本机标识：" + socketClient.getId();
+                        infos[1] = "本机地址：" + socketClient.getLocalIP();
+                        new AlertDialog.Builder(this).setTitle("本机连接状态").setItems(infos, null)
+                                .setNegativeButton("确定", null).show();
+                    }else {
+                        Toast.makeText(this , "未连接服务器！", Toast.LENGTH_SHORT).show();
                     }
                 }
                 break;

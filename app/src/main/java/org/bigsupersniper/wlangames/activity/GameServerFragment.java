@@ -291,8 +291,11 @@ public class GameServerFragment extends Fragment{
                     Toast.makeText(getActivity() , msg.obj.toString() , Toast.LENGTH_SHORT).show();
                     break;
                 case SendWhats.Client_Connected:
+                    etClientId.setEnabled(false);
                     etServerIp.setEnabled(false);
                     etServerPort.setEnabled(false);
+                    //设置客户端引用
+                    getIndexActivity().setSocketClient(socketClient);
                     Toast.makeText(getActivity() , "连接服务器成功！" , Toast.LENGTH_SHORT).show();
                     //提交客户端Id
                     SocketMessage sendMsg = new SocketMessage();
@@ -303,6 +306,7 @@ public class GameServerFragment extends Fragment{
                     socketClient.send(sendMsg);
                     break;
                 case SendWhats.Client_Disconnected:
+                    etClientId.setEnabled(true);
                     etServerIp.setEnabled(true);
                     etServerPort.setEnabled(true);
                     swClient.setChecked(false);

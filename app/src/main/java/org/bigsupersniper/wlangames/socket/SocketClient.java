@@ -60,6 +60,7 @@ public class SocketClient {
     public SocketClient(SocketChannel channel){
         this.channel = channel;
         this.init();
+        this.localIP = channel.socket().getRemoteSocketAddress().toString().replace("/","");
     }
 
     public void setOnSocketClientListener(OnSocketClientListener onSocketClientListener){
@@ -75,7 +76,6 @@ public class SocketClient {
             this.connected = true;
             channel.configureBlocking(false);
             channel.register(selector, SelectionKey.OP_READ);
-            this.localIP = channel.socket().getRemoteSocketAddress().toString().replace("/","");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -88,6 +88,7 @@ public class SocketClient {
                 channel.connect(new InetSocketAddress(ip, port));
                 this.init();
                 this.openRead();
+                this.localIP = channel.socket().getLocalSocketAddress().toString().replace("/","");
             }
         } catch (IOException e) {
             e.printStackTrace();
