@@ -1,27 +1,31 @@
 package org.bigsupersniper.wlangames.activity;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Fragment;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.GridView;
-import android.widget.NumberPicker;
+import android.widget.ListView;
 import android.widget.SimpleAdapter;
-import android.widget.StackView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.bigsupersniper.wlangames.R;
 import org.bigsupersniper.wlangames.common.BluffDice;
+import org.bigsupersniper.wlangames.socket.SocketClient;
+import org.bigsupersniper.wlangames.socket.SocketCmd;
+import org.bigsupersniper.wlangames.socket.SocketMessage;
+import org.bigsupersniper.wlangames.view.DiceListViewAdapter;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,18 +35,9 @@ public class BluffDiceFragment extends Fragment {
     private GridView gvDices ;
     private TextView tvDiceDesc;
     private TextView tvDiceCount;
-    private GridView gvSelect;
+    private Button btnOpen;
     private int count = 0;
-    private static List<Map<String, Integer>> stackViewList ;
-
-    static {
-        stackViewList = new ArrayList<Map<String, Integer>>();
-        for (int i = 0 ; i < 6 ; i++){
-            Map<String, Integer> map = new HashMap<String, Integer>();
-            map.put("src", BluffDice.getResId(i));
-            stackViewList.add(map);
-        }
-    }
+    private AlertDialog resultDialog;
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -52,15 +47,18 @@ public class BluffDiceFragment extends Fragment {
         tvDiceDesc = (TextView)view.findViewById(R.id.tvDiceDesc);
         tvDiceCount.setText("游戏次数 : " + count + " 次");
         gvDices = (GridView)view.findViewById(R.id.gvDices);
-        gvSelect = (GridView)view.findViewById(R.id.gvSelect);
-        gvSelect.setAdapter(new SimpleAdapter(getActivity(), stackViewList , R.layout.gv_bluff_dice_item, new String[]{ "src" }, new int[]{R.id.imgDice}));
-        gvSelect.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        btnOpen = (Button)view.findViewById(R.id.btnOpen);
+        btnOpen.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Map<String, Integer> map = (Map<String, Integer>)adapterView.getItemAtPosition(i);
-                Toast.makeText(getActivity() , BluffDice.valueOf(map.get("src")) , Toast.LENGTH_SHORT).show();
+            public void onClick(View view) {
+                SocketMessage msg = new SocketMessage();
+                msg.setFrom(socketClient.getLocalIP());
+                msg.setTo(socketClient.getRemoteIP());
+                msg.setCmd(SocketCmd.BluffDice_Open);
+                socketClient.send(msg);
             }
         });
+
         player = MediaPlayer.create(getActivity(), R.raw.shake);
         player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -70,21 +68,25 @@ public class BluffDiceFragment extends Fragment {
             }
         });
 
-        NumberPicker numberPicker = (NumberPicker)view.findViewById(R.id.numberPicker);
-        numberPicker.setMaxValue(1);
-        numberPicker.setMaxValue(20);
-
         return view;
     }
 
+    private SocketClient socketClient;
+    public void setSocketClient(SocketClient socketClient){
+        this.socketClient = socketClient;
+    }
+
+
     public void refreshDices(int[] ids){
         if (ids.length < 5) return;
+        if (!btnOpen.isShown()){
+            btnOpen.setVisibility(View.VISIBLE);
+        }
         tvDiceDesc.setText("上一局游戏时间 : " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
         tvDiceCount.setText("游戏次数 : " + (++count) + " 次");
         if (!player.isPlaying()) {
             player.start();
         }
-        Arrays.sort(ids);
         int[] res = BluffDice.toRes(ids);
         List<Map<String, Integer>> list = new ArrayList<Map<String, Integer>>();
 
@@ -95,6 +97,41 @@ public class BluffDiceFragment extends Fragment {
         }
 
         gvDices.setAdapter(new SimpleAdapter(getActivity(), list, R.layout.gv_bluff_dice_item, new String[]{ "src" }, new int[]{R.id.imgDice}));
+    }
+
+    public void showResult(Map<String, int[]> map){
+        if (!map.isEmpty()) {
+            Activity _that = getActivity();
+            List<Map<String, Object>> adapterList = new ArrayList<Map<String, Object>>();
+
+            Iterator<String> keys = map.keySet().iterator();
+
+            while (keys.hasNext()) {
+                String id = keys.next();
+                Map<String, Object> adapterMap = new HashMap<String, Object>();
+                List<Map<String, Integer>> list = new ArrayList<Map<String, Integer>>();
+                int[] res = BluffDice.toRes(map.get(id));
+                for (int i = 0; i < res.length; i++) {
+                    Map<String, Integer> m = new HashMap<String, Integer>();
+                    m.put("src", res[i]);
+                    list.add(m);
+                }
+
+                adapterMap.put("id", id);
+                adapterMap.put("diceList", list);
+                adapterList.add(adapterMap);
+            }
+
+            View view = _that.getLayoutInflater().inflate(R.layout.dialog_dice_listview, null);
+            ListView listView = (ListView) view.findViewById(R.id.lvDicesResult);
+            listView.setAdapter(new DiceListViewAdapter(_that, adapterList));
+
+            if (resultDialog != null && resultDialog.isShowing()) {
+                resultDialog.dismiss();
+            }
+
+            resultDialog = new AlertDialog.Builder(_that).setTitle("本局结果").setView(view).setNegativeButton("确定", null).show();
+        }
     }
 
 }

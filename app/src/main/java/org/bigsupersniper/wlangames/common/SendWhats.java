@@ -13,20 +13,10 @@ public final class SendWhats {
     /**
      * 客户端连接后操作
      */
-    public final static int Broadcast_BluffDice = 10;
-
-    /**
-     * 客户端连接后操作
-     */
-    public final static int Broadcast_CPoker = 11;
-
-    /**
-     * 客户端连接后操作
-     */
     public final static  int Client_Connected = 20;
 
     /**
-     * 客户端连接后操作
+     * 客户端断开连接后操作
      */
     public final static  int Client_Disconnected = 21;
 
@@ -34,5 +24,12 @@ public final class SendWhats {
      * 客户端读取后操作
      */
     public final static int Client_ReadMessage = 22;
+
+
+    public final static int Broadcast_BluffDice = 100;
+    public final static int Broadcast_BluffDice_Result = 101;
+
+
+    public final static int Broadcast_CPoker = 200;
 
 }

@@ -1,5 +1,7 @@
 package org.bigsupersniper.wlangames.socket;
 
+import org.bigsupersniper.wlangames.common.SendWhats;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
@@ -64,6 +66,8 @@ public class SocketServer {
             public void onRead(SocketClient client , SocketMessage msg) {
                 if (msg.getCmd().equals(SocketCmd.SetClientId)){
                     client.setId(msg.getBody());
+                }else if (msg.getCmd().equals(SocketCmd.BluffDice_Open)){
+                    broadcast(SendWhats.Broadcast_BluffDice_Result);
                 }
             }
 
@@ -172,8 +176,7 @@ public class SocketServer {
             while (iterator.hasNext()){
                 SocketClient client = iterator.next();
                 String ip = client.getLocalIP();
-                String ls = ip.substring(0 , ip.lastIndexOf(":"));
-                ips.add(client.getId() + " (" + ls + ")");
+                ips.add(client.getId() + " ( " + ip + " )");
             }
         }
 

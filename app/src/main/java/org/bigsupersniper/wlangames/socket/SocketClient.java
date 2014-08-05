@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -24,6 +23,7 @@ public class SocketClient {
     private ByteBuffer readBuffer;
     private ByteBuffer sendBuffer;
     private String localIP;
+    private String remoteIP;
     private String id ;
 
     private OnSocketClientListener onSocketClientListener= new OnSocketClientListener() {
@@ -61,6 +61,7 @@ public class SocketClient {
         this.channel = channel;
         this.init();
         this.localIP = channel.socket().getRemoteSocketAddress().toString().replace("/","");
+        this.remoteIP = channel.socket().getLocalSocketAddress().toString().replace("/","");
     }
 
     public void setOnSocketClientListener(OnSocketClientListener onSocketClientListener){
@@ -89,6 +90,7 @@ public class SocketClient {
                 this.init();
                 this.openRead();
                 this.localIP = channel.socket().getLocalSocketAddress().toString().replace("/","");
+                this.remoteIP = channel.socket().getRemoteSocketAddress().toString().replace("/","");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -174,6 +176,10 @@ public class SocketClient {
 
     public String getLocalIP(){
         return this.localIP;
+    }
+
+    public String getRemoteIP(){
+        return this.remoteIP;
     }
 
     public void setId(String id){

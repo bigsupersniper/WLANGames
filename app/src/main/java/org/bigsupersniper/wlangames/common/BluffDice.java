@@ -42,6 +42,8 @@ public class BluffDice {
         for (int i = 0 ; i < dices.length ; i++){
             dices[i] = r.nextInt(6);
         }
+        //排序
+        Arrays.sort(dices);
 
         return dices;
     }

@@ -1,11 +1,6 @@
 package org.bigsupersniper.wlangames.socket;
 
-import com.google.gson.Gson;
-
-import org.bigsupersniper.wlangames.common.BluffDice;
-
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class SocketChannelPool{

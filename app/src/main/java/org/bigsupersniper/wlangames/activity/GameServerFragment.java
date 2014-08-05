@@ -2,10 +2,8 @@ package org.bigsupersniper.wlangames.activity;
 
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.content.Context;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,12 +13,13 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.os.Handler;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.bigsupersniper.wlangames.R;
 import org.bigsupersniper.wlangames.common.BluffDice;
+import org.bigsupersniper.wlangames.common.BluffDiceHistory;
 import org.bigsupersniper.wlangames.common.CPoker;
 import org.bigsupersniper.wlangames.common.FragmentTags;
 import org.bigsupersniper.wlangames.common.SendWhats;
@@ -32,14 +31,12 @@ import org.bigsupersniper.wlangames.socket.SocketClient;
 import org.bigsupersniper.wlangames.socket.SocketCmd;
 import org.bigsupersniper.wlangames.socket.SocketMessage;
 import org.bigsupersniper.wlangames.socket.SocketServer;
-import org.bigsupersniper.wlangames.socket.SocketUtils;
 
-import java.io.IOException;
-import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 
@@ -85,13 +82,33 @@ public class GameServerFragment extends Fragment{
             if (clients.size() > 0){
                 Iterator<SocketClient> iterator = clients.iterator();
                 if(what == SendWhats.Broadcast_BluffDice){
+                    BluffDiceHistory history = BluffDiceHistory.getInstance();
+                    history.reset();
+                    while (iterator.hasNext()){
+                        SocketClient client = iterator.next();
+                        SocketMessage msg = new SocketMessage();
+                        int[] dices = BluffDice.shake();
+                        msg.setFrom(socketServer.getLocalIP());
+                        msg.setTo(client.getLocalIP());
+                        msg.setCmd(SocketCmd.BluffDice);
+                        msg.setBody(new Gson().toJson(dices));
+
+                        client.send(msg);
+                        //add to history
+                        String ip = client.getLocalIP();
+                        String key = client.getId() + "( " + ip.substring(ip.lastIndexOf("."), ip.lastIndexOf(":")) + " )";
+                        history.add(key , dices);
+                    }
+                }else if(what == SendWhats.Broadcast_BluffDice_Result){
+                    BluffDiceHistory history = BluffDiceHistory.getInstance();
+                    String body = new Gson().toJson(history.getAll());
                     while (iterator.hasNext()){
                         SocketClient client = iterator.next();
                         SocketMessage msg = new SocketMessage();
                         msg.setFrom(socketServer.getLocalIP());
                         msg.setTo(client.getLocalIP());
-                        msg.setCmd(SocketCmd.BluffDice);
-                        msg.setBody(new Gson().toJson(BluffDice.shake()));
+                        msg.setCmd(SocketCmd.BluffDice_Open_Resp);
+                        msg.setBody(body);
 
                         client.send(msg);
                     }
@@ -136,7 +153,9 @@ public class GameServerFragment extends Fragment{
                 message = "没有已链接的客户端！";
             }
 
-            sendMessage(SendWhats.Toast_ShowMessage , message);
+            if (!message.equals("")){
+                sendMessage(SendWhats.Toast_ShowMessage , message);
+            }
         }
 
         @Override
@@ -212,7 +231,8 @@ public class GameServerFragment extends Fragment{
 
         @Override
         public void onRead(SocketClient client , SocketMessage msg) {
-            if (msg.getCmd().equals(SocketCmd.BluffDice) || msg.getCmd().equals(SocketCmd.CPoker)) {
+            if (msg.getCmd().equals(SocketCmd.BluffDice) || msg.getCmd().equals(SocketCmd.CPoker)
+                    || msg.getCmd().equals(SocketCmd.BluffDice_Open_Resp)) {
                 sendMessage(SendWhats.Client_ReadMessage, msg);
             }else if (msg.getCmd().equals(SocketCmd.Disconnected)){
                 sendMessage(SendWhats.Toast_ShowMessage, msg.getBody());
@@ -282,6 +302,14 @@ public class GameServerFragment extends Fragment{
         return (IndexActivity)getActivity();
     }
 
+    private BluffDiceFragment getBluffDiceFragment(){
+        return (BluffDiceFragment)getFragmentManager().findFragmentByTag(FragmentTags.BluffDice);
+    }
+
+    private CPokerFragment getCPokerFragment(){
+        return (CPokerFragment)getFragmentManager().findFragmentByTag(FragmentTags.CPoker);
+    }
+
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -294,8 +322,10 @@ public class GameServerFragment extends Fragment{
                     etClientId.setEnabled(false);
                     etServerIp.setEnabled(false);
                     etServerPort.setEnabled(false);
-                    //设置客户端引用
+                    //设置首页客户端引用
                     getIndexActivity().setSocketClient(socketClient);
+                    //设置骰子页面客户端引用
+                    getBluffDiceFragment().setSocketClient(socketClient);
                     Toast.makeText(getActivity() , "连接服务器成功！" , Toast.LENGTH_SHORT).show();
                     //提交客户端Id
                     SocketMessage sendMsg = new SocketMessage();
@@ -317,20 +347,26 @@ public class GameServerFragment extends Fragment{
                         SocketMessage readMsg = (SocketMessage) msg.obj;
                         FragmentTransaction transaction = getFragmentManager().beginTransaction();
                         getIndexActivity().hideAllFragments(transaction);
+                        String cmd = readMsg.getCmd();
                         Fragment fragment = null;
-                        if (readMsg.getCmd().equals(SocketCmd.BluffDice)) {
-                            fragment = getFragmentManager().findFragmentByTag(FragmentTags.BluffDice);
-                            int[] ids = new Gson().fromJson(readMsg.getBody() , int[].class);
-                            ((BluffDiceFragment)fragment).refreshDices(ids);
-                        } else if (readMsg.getCmd().equals(SocketCmd.CPoker)) {
-                            fragment = getFragmentManager().findFragmentByTag(FragmentTags.CPoker);
+                        if (cmd.equals(SocketCmd.BluffDice) || cmd.equals(SocketCmd.BluffDice_Open_Resp)) {
+                            BluffDiceFragment bluffDiceFragment = getBluffDiceFragment();
+                            if (cmd.equals(SocketCmd.BluffDice)){
+                                int[] ids = new Gson().fromJson(readMsg.getBody() , int[].class);
+                                bluffDiceFragment.refreshDices(ids);
+                            }else{
+                                Map<String , int[]> map = new Gson().fromJson(readMsg.getBody(), new TypeToken<Map<String,int[]>>(){}.getType());
+                                bluffDiceFragment.showResult(map);
+                            }
+                            fragment = bluffDiceFragment;
+                        }else if (cmd.equals(SocketCmd.CPoker)) {
+                            CPokerFragment cPokerFragment = getCPokerFragment();
                             String[] cards = new Gson().fromJson(readMsg.getBody() , String[].class);
-                            ((CPokerFragment)fragment).refreshCards(cards);
+                            cPokerFragment.refreshCards(cards);
+                            fragment = cPokerFragment;
                         }
                         if (fragment != null) {
-                            if (fragment.isVisible()){
-                                transaction.show(fragment);
-                            }
+                            transaction.show(fragment);
                             transaction.commit();
                         }
                     }
