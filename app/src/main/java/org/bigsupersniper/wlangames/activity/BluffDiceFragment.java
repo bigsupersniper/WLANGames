@@ -130,7 +130,7 @@ public class BluffDiceFragment extends Fragment {
                 resultDialog.dismiss();
             }
 
-            resultDialog = new AlertDialog.Builder(_that).setTitle("本局结果").setView(view).setNegativeButton("确定", null).show();
+            resultDialog = new AlertDialog.Builder(_that).setTitle("上一局结果").setView(view).setNegativeButton("确定", null).show();
         }
     }
 
