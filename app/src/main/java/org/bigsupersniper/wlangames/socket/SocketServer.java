@@ -1,10 +1,12 @@
 package org.bigsupersniper.wlangames.socket;
 
-import org.bigsupersniper.wlangames.common.SendWhats;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -17,71 +19,27 @@ public class SocketServer {
     private ServerSocketChannel channel ;
     private SocketChannelPool channelPool ;
     private int poolSize;
+    private Selector selector;
+    private ByteBuffer readBuffer;
     private OnSocketServerListener onSocketServerListener;
     private OnSocketClientListener onSocketClientListener;
 
     public SocketServer(){
+        readBuffer = ByteBuffer.allocate(SocketUtils.BufferSize);
         channelPool = new SocketChannelPool();
-        this.onSocketServerListener = new OnSocketServerListener() {
-            @Override
-            public void onBind(boolean success) {
-
-            }
-
-            @Override
-            public void onMessage(String message) {
-
-            }
-
-            @Override
-            public void onBroadcast(List<SocketClient> clients , int what) {
-
-            }
-
-            @Override
-            public void onStop(List<SocketClient> clients) {
-
-            }
-        };
-        this.onSocketClientListener = new OnSocketClientListener() {
-            @Override
-            public void onConnected() {
-
-            }
-
-            @Override
-            public void onDisconnected(SocketClient client) {
-                if (isStarted){
-                    channelPool.remove(client);
-                    onSocketServerListener.onMessage(client.getLocalIP() + " 已断开连接！");
-                }
-            }
-
-            @Override
-            public void onMessage(String message) {
-
-            }
-
-            @Override
-            public void onRead(SocketClient client , SocketMessage msg) {
-                if (msg.getCmd().equals(SocketCmd.SetClientId)){
-                    client.setId(msg.getBody());
-                }else if (msg.getCmd().equals(SocketCmd.BluffDice_Open)){
-                    broadcast(SendWhats.Broadcast_BluffDice_Result);
-                }
-            }
-
-            @Override
-            public void onSend(SocketClient client , SocketMessage msg) {
-                if(msg.getCmd().equals(SocketCmd.Disconnected)){
-                    client.disconnect();
-                }
-            }
-        };
+        try {
+            selector = Selector.open();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void setOnSocketServerListener(OnSocketServerListener onSocketServerListener){
         this.onSocketServerListener = onSocketServerListener;
+    }
+
+    public void setOnPoolSocketClientListener(OnSocketClientListener onSocketClientListener){
+        this.onSocketClientListener = onSocketClientListener;
     }
 
     private Runnable acceptRunnable = new Runnable() {
@@ -90,21 +48,58 @@ public class SocketServer {
             while (isStarted){
                 try {
                     SocketClient client = new SocketClient(channel.accept());
-                    SocketMessage msg = new SocketMessage();
-                    msg.setFrom(localIP);
-                    msg.setTo(client.getLocalIP());
-
-                    if (channelPool.size() >= poolSize){
-                        msg.setCmd(SocketCmd.Disconnected);
-                        msg.setBody("服务器已达最大连接数");
-                        client.send(msg);
+                    if (getCurrentPoolSize() <= 0){
+                        client.send(SocketCmd.Client_Disconnected , "服务器连接池已满");
                     }else{
-                        msg.setCmd(SocketCmd.Connected);
-                        msg.setBody("welcome :" + msg.getTo());
-                        client.send(msg);
+                        client.send(SocketCmd.Client_Connected , "欢迎 : " + client.getLocalIP());
                         client.setOnSocketClientListener(onSocketClientListener);
-                        channelPool.add(client);
-                        client.openRead();
+                        if(channelPool.add(client)){
+                            client.openRead();
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    };
+
+    private Runnable readRunnable = new Runnable() {
+        @Override
+        public void run() {
+            while (isStarted) {
+                try {
+                    if (selector.select() == 0) continue;
+
+                    SocketChannel sc;
+                    StringBuilder sb = new StringBuilder();
+                    for (SelectionKey key : selector.selectedKeys()) {
+                        selector.selectedKeys().remove(key);
+                        if (key.isReadable()) {
+                            sc = (SocketChannel) key.channel();
+                            readBuffer.clear();
+                            int len = 0;
+                            while ((len = sc.read(readBuffer)) > 0) {
+                                byte[] buffer = readBuffer.array();
+                                if (buffer[len - 1] == SocketUtils.EndByte) {
+                                    sb.append(new String(buffer, 0,len - 1, SocketUtils.MessageCharset));
+                                    break;
+                                } else {
+                                    sb.append(new String(buffer, 0, len, SocketUtils.MessageCharset));
+                                }
+                                readBuffer.clear();
+                            }
+
+                            if (sb.length() > 0) {
+                                try{
+                                    //SocketMessage msg = new Gson().fromJson(sb.toString(), SocketMessage.class);
+                                    System.out.println("server read : " + sb.toString());
+                                }catch (Exception  e){
+                                    e.printStackTrace();
+                                    break;
+                                }
+                            }
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -128,6 +123,7 @@ public class SocketServer {
                 poolSize = backlog;
                 localIP = ip + ":" + port;
                 new Thread(acceptRunnable).start();
+                //new Thread(readRunnable).start();
             }
             onSocketServerListener.onBind(isStarted);
         } catch (IOException e) {
@@ -139,17 +135,14 @@ public class SocketServer {
         return this.isStarted;
     }
 
-    public int getPoolSize(){
-        return this.poolSize;
-    }
-
     public void stop(){
         synchronized (lock){
             if (this.isStarted){
                 this.isStarted = false;
                 if(channel.isOpen()){
-                    onSocketServerListener.onStop(channelPool.getList());
+                    onSocketServerListener.onStop();
                     try {
+                        selector.close();
                         channel.close();
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -163,13 +156,29 @@ public class SocketServer {
         return localIP;
     }
 
-    public void broadcast(int what){
-        if (this.isStarted){
-            onSocketServerListener.onBroadcast(channelPool.getList() , what);
-        }
+    public int getCurrentPoolSize(){
+        return poolSize - channelPool.size();
     }
 
-    public String[] getList(){
+    public List<SocketClient> getList(){
+        return channelPool.getList();
+    }
+
+    public boolean add(SocketClient client){
+        if (isStarted){
+            return channelPool.add(client);
+        }
+        return false;
+    }
+
+    public boolean remove(SocketClient client){
+        if (isStarted){
+            return channelPool.remove(client);
+        }
+        return false;
+    }
+
+    public String[] getIPList(){
         List<String> ips = new ArrayList<String>();
         if (channelPool.size() > 0){
             Iterator<SocketClient> iterator = channelPool.getList().iterator();

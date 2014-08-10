@@ -12,7 +12,7 @@ public class SocketMessage {
     @SerializedName("to")
     private String to;
     @SerializedName("cmd")
-    private String cmd;
+    private int cmd;
     @SerializedName("body")
     private String body = "";
 
@@ -32,11 +32,11 @@ public class SocketMessage {
         this.to = to;
     }
 
-    public String getCmd() {
+    public int getCmd() {
         return cmd;
     }
 
-    public void setCmd(String cmd) {
+    public void setCmd(int cmd) {
         this.cmd = cmd;
     }
 

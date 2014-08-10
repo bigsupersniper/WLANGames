@@ -5,8 +5,6 @@ package org.bigsupersniper.wlangames.socket;
  */
 public interface OnSocketClientListener {
 
-    public void onConnected();
-
     public void onDisconnected(SocketClient client);
 
     public void onMessage(String message);

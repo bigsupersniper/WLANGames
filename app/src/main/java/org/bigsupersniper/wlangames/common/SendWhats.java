@@ -8,7 +8,7 @@ public final class SendWhats {
     /**
      * 子线程使用 Toast 显示消息
      */
-    public final static int Toast_ShowMessage = 1;
+    public final static int Toast_ShowMessage = 0x1;
 
     /**
      * 客户端连接后操作
@@ -24,12 +24,5 @@ public final class SendWhats {
      * 客户端读取后操作
      */
     public final static int Client_ReadMessage = 22;
-
-
-    public final static int Broadcast_BluffDice = 100;
-    public final static int Broadcast_BluffDice_Result = 101;
-
-
-    public final static int Broadcast_CPoker = 200;
 
 }

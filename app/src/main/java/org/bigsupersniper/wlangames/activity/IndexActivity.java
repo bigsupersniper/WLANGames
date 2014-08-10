@@ -3,19 +3,20 @@ package org.bigsupersniper.wlangames.activity;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Toast;
 
 import org.bigsupersniper.wlangames.R;
-import org.bigsupersniper.wlangames.common.FragmentTags;
-import org.bigsupersniper.wlangames.common.SendWhats;
+import org.bigsupersniper.wlangames.router.ServerRouter;
 import org.bigsupersniper.wlangames.socket.SocketClient;
+import org.bigsupersniper.wlangames.socket.SocketCmd;
+import org.bigsupersniper.wlangames.socket.SocketMessage;
 import org.bigsupersniper.wlangames.socket.SocketServer;
 
 
@@ -49,10 +50,21 @@ public class IndexActivity extends Activity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+
+        //初始化页面
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        gameServerFragment = new GameServerFragment();
+        bluffDiceFragment = new BluffDiceFragment();
+        cPokerFragment = new CPokerFragment();
+        transaction.add(R.id.container , gameServerFragment);
+        transaction.add(R.id.container , bluffDiceFragment);
+        transaction.add(R.id.container , cPokerFragment);
+        hideAllFragment(transaction);
+        transaction.show(gameServerFragment);
+        transaction.commit();
     }
 
-    public void hideAllFragments(FragmentTransaction transaction ){
-        findViewById(R.id.layoutIndex).setVisibility(View.INVISIBLE);
+    private void hideAllFragment(FragmentTransaction transaction){
         transaction.hide(gameServerFragment);
         transaction.hide(bluffDiceFragment);
         transaction.hide(cPokerFragment);
@@ -61,31 +73,24 @@ public class IndexActivity extends Activity
     @Override
     public void onNavigationDrawerItemSelected(int position) {
         FragmentManager fragmentManager = getFragmentManager();
-        if (gameServerFragment == null){
-            gameServerFragment = (GameServerFragment)fragmentManager.findFragmentByTag(FragmentTags.GameServer);
-        }
-        if (bluffDiceFragment == null){
-            bluffDiceFragment = (BluffDiceFragment)fragmentManager.findFragmentByTag(FragmentTags.BluffDice);
-        }
-        if (cPokerFragment == null){
-            cPokerFragment = (CPokerFragment)fragmentManager.findFragmentByTag(FragmentTags.CPoker);
-        }
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        Fragment fragment = null;
 
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        this.hideAllFragments(transaction);
         switch (position) {
             case 0:
-                transaction.show(gameServerFragment);
+                fragment = gameServerFragment;
                 break;
             case 1:
-                transaction.show(bluffDiceFragment);
+                fragment = bluffDiceFragment;
                 break;
             case 2:
-                transaction.show(cPokerFragment);
+                fragment = cPokerFragment;
                 break;
             default:
                 break;
         }
+        hideAllFragment(transaction);
+        transaction.show(fragment);
         transaction.commit();
     }
 
@@ -144,16 +149,6 @@ public class IndexActivity extends Activity
         return true;
     }
 
-    private SocketServer socketServer;
-    public void setSocketServer(SocketServer socketServer){
-        this.socketServer = socketServer;
-    }
-
-    private SocketClient socketClient;
-    public void setSocketClient(SocketClient socketClient){
-        this.socketClient = socketClient;
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -163,7 +158,7 @@ public class IndexActivity extends Activity
         switch (id){
             case R.id.action_server_status:
                 if (socketServer != null && socketServer.isStarted()){
-                    String[] ips = socketServer.getList();
+                    String[] ips = socketServer.getIPList();
                     if (ips.length > 0){
                         new AlertDialog.Builder(this).setTitle("在线客户端列表").setItems(ips, null)
                                 .setNegativeButton("确定", null).show();
@@ -188,9 +183,9 @@ public class IndexActivity extends Activity
             case R.id.action_next:
                 if (socketServer != null){
                     if (bluffDiceFragment.isVisible()){
-                        socketServer.broadcast(SendWhats.Broadcast_BluffDice);
+                        serverRouter.broadcast(SocketCmd.BluffDice_Send);
                     }else if(cPokerFragment.isVisible()){
-                        socketServer.broadcast(SendWhats.Broadcast_CPoker);
+                        serverRouter.broadcast(SocketCmd.CPoker_Send);
                     }
                 }else{
                     Toast.makeText(this , "服务未启动！", Toast.LENGTH_SHORT).show();
@@ -204,4 +199,51 @@ public class IndexActivity extends Activity
 
         return super.onOptionsItemSelected(item);
     }
+
+    private SocketServer socketServer;
+    private ServerRouter serverRouter;
+    private SocketClient socketClient;
+
+    public void register(SocketServer socketServer){
+        this.socketServer = socketServer;
+    }
+
+    public void register(ServerRouter serverRouter){
+        this.serverRouter = serverRouter;
+    }
+
+    public void register(SocketClient socketClient){
+        this.socketClient = socketClient;
+    }
+
+    public void sendCmd(int cmd){
+        if (socketClient != null){
+            SocketMessage msg = new SocketMessage();
+            msg.setFrom(socketClient.getLocalIP());
+            msg.setTo(socketClient.getRemoteIP());
+            msg.setCmd(cmd);
+            socketClient.send(msg);
+        }
+    }
+
+    public void router(SocketMessage msg){
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        switch (msg.getCmd()){
+            case SocketCmd.BluffDice_Send:
+            case SocketCmd.BluffDice_Open_Resp:
+                hideAllFragment(transaction);
+                transaction.show(bluffDiceFragment);
+                bluffDiceFragment.router(msg);
+                break;
+            case SocketCmd.CPoker_Send:
+                hideAllFragment(transaction);
+                transaction.show(cPokerFragment);
+                cPokerFragment.router(msg);
+                break;
+            default:
+                break;
+        }
+        transaction.commit();
+    }
+
 }

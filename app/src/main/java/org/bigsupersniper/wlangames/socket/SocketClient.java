@@ -25,33 +25,7 @@ public class SocketClient {
     private String localIP;
     private String remoteIP;
     private String id ;
-
-    private OnSocketClientListener onSocketClientListener= new OnSocketClientListener() {
-        @Override
-        public void onConnected() {
-
-        }
-
-        @Override
-        public void onDisconnected(SocketClient client) {
-
-        }
-
-        @Override
-        public void onMessage(String message) {
-
-        }
-
-        @Override
-        public void onRead(SocketClient client , SocketMessage msg) {
-
-        }
-
-        @Override
-        public void onSend(SocketClient client , SocketMessage msg) {
-
-        }
-    };
+    private OnSocketClientListener onSocketClientListener ;
 
     public SocketClient(){
 
@@ -124,11 +98,12 @@ public class SocketClient {
                             }
 
                             if (sb.length() > 0) {
-                                SocketMessage msg = new Gson().fromJson(sb.toString(), SocketMessage.class);
-                                if (msg.getCmd().equals(SocketCmd.Connected)){
-                                    onSocketClientListener.onConnected();
-                                }else{
+                                try{
+                                    SocketMessage msg = new Gson().fromJson(sb.toString(), SocketMessage.class);
                                     onSocketClientListener.onRead(SocketClient.this , msg);
+                                }catch (Exception  e){
+                                    e.printStackTrace();
+                                    break;
                                 }
                             }else{
                                 disconnect();
@@ -168,6 +143,16 @@ public class SocketClient {
                 }
             }
         });
+    }
+
+    public void send(int cmd , String body){
+        SocketMessage msg = new SocketMessage();
+        msg.setFrom(this.localIP);
+        msg.setTo(this.remoteIP);
+        msg.setCmd(cmd);
+        msg.setBody(body);
+
+        this.send(msg);
     }
 
     public boolean isConnected(){

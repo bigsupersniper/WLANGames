@@ -6,16 +6,18 @@ import java.util.List;
 public class SocketChannelPool{
     private List<SocketClient> pool = new ArrayList<SocketClient>();
 
-    public synchronized void add(SocketClient client){
+    public synchronized boolean add(SocketClient client){
         if (!pool.contains(client)){
-            pool.add(client);
+            return pool.add(client);
         }
+        return false;
     }
 
-    public synchronized void remove(SocketClient client){
+    public synchronized boolean remove(SocketClient client){
         if (pool.contains(client)){
-            pool.remove(client);
+            return pool.remove(client);
         }
+        return false;
     }
 
     public synchronized int size(){

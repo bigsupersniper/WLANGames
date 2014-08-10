@@ -14,9 +14,11 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.bigsupersniper.wlangames.R;
 import org.bigsupersniper.wlangames.common.BluffDice;
-import org.bigsupersniper.wlangames.socket.SocketClient;
 import org.bigsupersniper.wlangames.socket.SocketCmd;
 import org.bigsupersniper.wlangames.socket.SocketMessage;
 import org.bigsupersniper.wlangames.view.DiceListViewAdapter;
@@ -38,7 +40,9 @@ public class BluffDiceFragment extends Fragment {
     private Button btnOpen;
     private int count = 0;
     private AlertDialog resultDialog;
+    private Map<String , int[]> lastResultHistory;
 
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bluff_dice, container, false);
@@ -51,11 +55,12 @@ public class BluffDiceFragment extends Fragment {
         btnOpen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SocketMessage msg = new SocketMessage();
-                msg.setFrom(socketClient.getLocalIP());
-                msg.setTo(socketClient.getRemoteIP());
-                msg.setCmd(SocketCmd.BluffDice_Open);
-                socketClient.send(msg);
+                //若已请求结果则不重复发送请求
+                if (lastResultHistory == null){
+                    getParent().sendCmd(SocketCmd.BluffDice_Open);
+                }else{
+                    showDices(lastResultHistory);
+                }
             }
         });
 
@@ -71,11 +76,26 @@ public class BluffDiceFragment extends Fragment {
         return view;
     }
 
-    private SocketClient socketClient;
-    public void setSocketClient(SocketClient socketClient){
-        this.socketClient = socketClient;
+    private IndexActivity getParent(){
+        return (IndexActivity)getActivity();
     }
 
+    public void router(SocketMessage msg) {
+        int cmd = msg.getCmd();
+        switch (cmd){
+            case SocketCmd.BluffDice_Send:
+                int[] ids = new Gson().fromJson(msg.getBody() , int[].class);
+                this.refreshDices(ids);
+                this.lastResultHistory = null;
+                break;
+            case SocketCmd.BluffDice_Open_Resp:
+                lastResultHistory = new Gson().fromJson(msg.getBody(), new TypeToken<Map<String,int[]>>(){}.getType());
+                this.showDices(lastResultHistory);
+                break;
+            default:
+                break;
+        }
+    }
 
     public void refreshDices(int[] ids){
         if (ids.length < 5) return;
@@ -99,7 +119,7 @@ public class BluffDiceFragment extends Fragment {
         gvDices.setAdapter(new SimpleAdapter(getActivity(), list, R.layout.gv_bluff_dice_item, new String[]{ "src" }, new int[]{R.id.imgDice}));
     }
 
-    public void showResult(Map<String, int[]> map){
+    public void showDices(Map<String, int[]> map){
         if (!map.isEmpty()) {
             Activity _that = getActivity();
             List<Map<String, Object>> adapterList = new ArrayList<Map<String, Object>>();

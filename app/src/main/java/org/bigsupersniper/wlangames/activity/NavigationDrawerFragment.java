@@ -4,7 +4,6 @@ package org.bigsupersniper.wlangames.activity;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -23,7 +22,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import org.bigsupersniper.wlangames.R;
-import org.bigsupersniper.wlangames.common.FragmentTags;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -34,7 +32,7 @@ public class NavigationDrawerFragment extends Fragment {
 
     /**
      * Remember the position of the selected item.
-     */
+    */
     private static final String STATE_SELECTED_POSITION = "selected_navigation_drawer_position";
 
     /**
@@ -77,9 +75,6 @@ public class NavigationDrawerFragment extends Fragment {
             mCurrentSelectedPosition = savedInstanceState.getInt(STATE_SELECTED_POSITION);
             mFromSavedInstanceState = true;
         }
-
-        // Select either the default item (0) or the last selected item.
-        //selectItem(mCurrentSelectedPosition);
     }
 
     @Override
@@ -87,21 +82,6 @@ public class NavigationDrawerFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         // Indicate that this fragment would like to influence the set of actions in the action bar.
         setHasOptionsMenu(true);
-
-        //初始化相关Fragment
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        GameServerFragment gameServerFragment = new GameServerFragment();
-        BluffDiceFragment bluffDiceFragment = new BluffDiceFragment();
-        CPokerFragment cPokerFragment = new CPokerFragment();
-
-        transaction.add(R.id.container, gameServerFragment , FragmentTags.GameServer);
-        transaction.add(R.id.container , bluffDiceFragment, FragmentTags.BluffDice);
-        transaction.add(R.id.container , cPokerFragment, FragmentTags.CPoker);
-        transaction.hide(gameServerFragment);
-        transaction.hide(bluffDiceFragment);
-        transaction.hide(cPokerFragment);
-        transaction.commit();
-
     }
 
     @Override
@@ -124,7 +104,7 @@ public class NavigationDrawerFragment extends Fragment {
                         getString(R.string.title_section2),
                         getString(R.string.title_section3),
                 }));
-        mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
+
         return mDrawerListView;
     }
 

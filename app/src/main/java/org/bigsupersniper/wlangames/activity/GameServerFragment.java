@@ -1,7 +1,6 @@
 package org.bigsupersniper.wlangames.activity;
 
 import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -14,30 +13,17 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import org.bigsupersniper.wlangames.R;
-import org.bigsupersniper.wlangames.common.BluffDice;
-import org.bigsupersniper.wlangames.common.BluffDiceHistory;
-import org.bigsupersniper.wlangames.common.CPoker;
-import org.bigsupersniper.wlangames.common.FragmentTags;
 import org.bigsupersniper.wlangames.common.SendWhats;
 import org.bigsupersniper.wlangames.common.StringUtils;
 import org.bigsupersniper.wlangames.common.WifiUtils;
+import org.bigsupersniper.wlangames.router.ServerRouter;
 import org.bigsupersniper.wlangames.socket.OnSocketClientListener;
 import org.bigsupersniper.wlangames.socket.OnSocketServerListener;
 import org.bigsupersniper.wlangames.socket.SocketClient;
 import org.bigsupersniper.wlangames.socket.SocketCmd;
 import org.bigsupersniper.wlangames.socket.SocketMessage;
 import org.bigsupersniper.wlangames.socket.SocketServer;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 
 public class GameServerFragment extends Fragment{
@@ -48,6 +34,7 @@ public class GameServerFragment extends Fragment{
     private TextView tvIP;
     private EditText etPort;
     private EditText etCount;
+    private ServerRouter serverRouter;
 
     //client
     private SocketClient socketClient;
@@ -55,6 +42,7 @@ public class GameServerFragment extends Fragment{
     private EditText etServerIp;
     private EditText etServerPort;
     private EditText etClientId;
+
 
     private OnSocketServerListener onSocketServerListener = new OnSocketServerListener() {
         @Override
@@ -64,7 +52,8 @@ public class GameServerFragment extends Fragment{
                 message = "启动服务成功！";
                 etPort.setEnabled(false);
                 etCount.setEnabled(false);
-                getIndexActivity().setSocketServer(socketServer);
+                getParent().register(socketServer);
+                getParent().register(serverRouter);
             }else{
                 message = "启动服务失败，端口已绑定！";
             }
@@ -77,101 +66,36 @@ public class GameServerFragment extends Fragment{
         }
 
         @Override
-        public void onBroadcast(List<SocketClient> clients , int what) {
-            String message = "";
-            if (clients.size() > 0){
-                Iterator<SocketClient> iterator = clients.iterator();
-                if(what == SendWhats.Broadcast_BluffDice){
-                    BluffDiceHistory history = BluffDiceHistory.getInstance();
-                    history.reset();
-                    while (iterator.hasNext()){
-                        SocketClient client = iterator.next();
-                        SocketMessage msg = new SocketMessage();
-                        int[] dices = BluffDice.shake();
-                        msg.setFrom(socketServer.getLocalIP());
-                        msg.setTo(client.getLocalIP());
-                        msg.setCmd(SocketCmd.BluffDice);
-                        msg.setBody(new Gson().toJson(dices));
+        public void onStop() {
+            serverRouter.broadcast(SocketCmd.Server_Closed , "服务已停止");
+        }
+    };
 
-                        client.send(msg);
-                        //add to history
-                        String ip = client.getLocalIP();
-                        String key = client.getId() + "( " + ip.substring(ip.lastIndexOf("."), ip.lastIndexOf(":")) + " )";
-                        history.add(key , dices);
-                    }
-                }else if(what == SendWhats.Broadcast_BluffDice_Result){
-                    BluffDiceHistory history = BluffDiceHistory.getInstance();
-                    String body = new Gson().toJson(history.getAll());
-                    while (iterator.hasNext()){
-                        SocketClient client = iterator.next();
-                        SocketMessage msg = new SocketMessage();
-                        msg.setFrom(socketServer.getLocalIP());
-                        msg.setTo(client.getLocalIP());
-                        msg.setCmd(SocketCmd.BluffDice_Open_Resp);
-                        msg.setBody(body);
+    private OnSocketClientListener onPoolSocketClientListener = new OnSocketClientListener() {
 
-                        client.send(msg);
-                    }
-                }else if (what == SendWhats.Broadcast_CPoker){
-                    String[] shuffledCards = CPoker.shuffle();
-                    boolean[] gones = new boolean[4];
-                    Random random = new Random(new Date().getTime());
-                    int size = 4;
-                    if (clients.size() < 4) {
-                        size = clients.size();
-                    }
-
-                    int n = random.nextInt(4);
-
-                    while (iterator.hasNext()){
-                        SocketClient client = iterator.next();
-                        while (true) {
-                            if (!gones[n]) {
-                                gones[n] = true;
-                                SocketMessage msg = new SocketMessage();
-                                msg.setFrom(socketServer.getLocalIP());
-                                msg.setTo(client.getLocalIP());
-                                msg.setCmd(SocketCmd.CPoker);
-                                msg.setBody(new Gson().toJson(CPoker.deal(shuffledCards, n)));
-                                client.send(msg);
-                                size--;
-                                break;
-                            } else {
-                                n = random.nextInt(4);
-                            }
-                        }
-                        if(size <= 0) break;
-                    }
-                }
-
-                if(what == SendWhats.Broadcast_BluffDice){
-                    message = "本局 <大话骰> 开始于 : " + new SimpleDateFormat("HH:mm:ss").format(new Date());
-                }else if (what == SendWhats.Broadcast_CPoker){
-                    message = "本局 <十三水> 开始于 : " + new SimpleDateFormat("HH:mm:ss").format(new Date());
-                }
-            }else {
-                message = "没有已链接的客户端！";
-            }
-
-            if (!message.equals("")){
-                sendMessage(SendWhats.Toast_ShowMessage , message);
+        @Override
+        public void onDisconnected(SocketClient client) {
+            if (socketServer.remove(client)){
+                sendMessage(SendWhats.Toast_ShowMessage , client.getLocalIP() + " 已断开连接！");
             }
         }
 
         @Override
-        public void onStop(List<SocketClient> clients) {
-            if (clients.size() > 0) {
-                Iterator<SocketClient> iterator = clients.iterator();
-                while (iterator.hasNext()) {
-                    SocketClient client = iterator.next();
-                    SocketMessage msg = new SocketMessage();
-                    msg.setFrom(socketServer.getLocalIP());
-                    msg.setCmd(SocketCmd.Disconnected);
-                    msg.setBody("服务器已关闭");
-                    msg.setTo(client.getLocalIP());
+        public void onMessage(String message) { }
 
-                    client.send(msg);
-                }
+        @Override
+        public void onRead(SocketClient client , SocketMessage msg) {
+            serverRouter.router(client , msg);
+        }
+
+        @Override
+        public void onSend(SocketClient client , SocketMessage msg) {
+            switch (msg.getCmd()){
+                case SocketCmd.Client_Disconnected:
+                    client.disconnect();
+                    break;
+                default:
+                    break;
             }
         }
     };
@@ -187,6 +111,7 @@ public class GameServerFragment extends Fragment{
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if (b) {
                     socketServer = new SocketServer();
+                    serverRouter = new ServerRouter(socketServer);
                     String ip = tvIP.getText().toString();
                     int port = Integer.parseInt(etPort.getText().toString());
                     int count = Integer.parseInt(etCount.getText().toString());
@@ -201,6 +126,7 @@ public class GameServerFragment extends Fragment{
                         return;
                     }
                     socketServer.setOnSocketServerListener(onSocketServerListener);
+                    socketServer.setOnPoolSocketClientListener(onPoolSocketClientListener);
                     socketServer.bind(ip, port, count);
                 } else {
                     socketServer.stop();
@@ -215,35 +141,31 @@ public class GameServerFragment extends Fragment{
     private OnSocketClientListener onSocketClientListener = new OnSocketClientListener() {
 
         @Override
-        public void onConnected() {
-            sendMessage(SendWhats.Client_Connected, null);
-        }
-
-        @Override
         public void onDisconnected(SocketClient client) {
             sendMessage(SendWhats.Client_Disconnected, null);
         }
 
         @Override
-        public void onMessage(String message) {
-
-        }
+        public void onMessage(String message) {}
 
         @Override
         public void onRead(SocketClient client , SocketMessage msg) {
-            if (msg.getCmd().equals(SocketCmd.BluffDice) || msg.getCmd().equals(SocketCmd.CPoker)
-                    || msg.getCmd().equals(SocketCmd.BluffDice_Open_Resp)) {
-                sendMessage(SendWhats.Client_ReadMessage, msg);
-            }else if (msg.getCmd().equals(SocketCmd.Disconnected)){
-                sendMessage(SendWhats.Toast_ShowMessage, msg.getBody());
-                socketClient.disconnect();
+            switch (msg.getCmd()){
+                case SocketCmd.Client_Connected:
+                    sendMessage(SendWhats.Client_Connected, null);
+                    break;
+                case SocketCmd.Client_Disconnected:
+                case SocketCmd.Server_Closed:
+                    sendMessage(SendWhats.Client_Disconnected, null);
+                    break;
+                default:
+                    sendMessage(SendWhats.Client_ReadMessage, msg);
+                    break;
             }
         }
 
         @Override
-        public void onSend(SocketClient client , SocketMessage msg) {
-
-        }
+        public void onSend(SocketClient client , SocketMessage msg) {}
     };
 
     private void sendMessage(int what , Object obj){
@@ -298,16 +220,8 @@ public class GameServerFragment extends Fragment{
         });
     }
 
-    private IndexActivity getIndexActivity(){
+    private IndexActivity getParent(){
         return (IndexActivity)getActivity();
-    }
-
-    private BluffDiceFragment getBluffDiceFragment(){
-        return (BluffDiceFragment)getFragmentManager().findFragmentByTag(FragmentTags.BluffDice);
-    }
-
-    private CPokerFragment getCPokerFragment(){
-        return (CPokerFragment)getFragmentManager().findFragmentByTag(FragmentTags.CPoker);
     }
 
     private Handler handler = new Handler() {
@@ -323,17 +237,10 @@ public class GameServerFragment extends Fragment{
                     etServerIp.setEnabled(false);
                     etServerPort.setEnabled(false);
                     //设置首页客户端引用
-                    getIndexActivity().setSocketClient(socketClient);
-                    //设置骰子页面客户端引用
-                    getBluffDiceFragment().setSocketClient(socketClient);
-                    Toast.makeText(getActivity() , "连接服务器成功！" , Toast.LENGTH_SHORT).show();
+                    getParent().register(socketClient);
                     //提交客户端Id
-                    SocketMessage sendMsg = new SocketMessage();
-                    sendMsg.setFrom(socketClient.getLocalIP());
-                    sendMsg.setTo(etServerIp.getText().toString());
-                    sendMsg.setCmd(SocketCmd.SetClientId);
-                    sendMsg.setBody(socketClient.getId());
-                    socketClient.send(sendMsg);
+                    socketClient.send(SocketCmd.Client_Bind , socketClient.getId());
+                    Toast.makeText(getActivity() , "连接服务器成功！" , Toast.LENGTH_SHORT).show();
                     break;
                 case SendWhats.Client_Disconnected:
                     etClientId.setEnabled(true);
@@ -344,36 +251,13 @@ public class GameServerFragment extends Fragment{
                     break;
                 case SendWhats.Client_ReadMessage:
                     if (msg.obj != null) {
-                        SocketMessage readMsg = (SocketMessage) msg.obj;
-                        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-                        getIndexActivity().hideAllFragments(transaction);
-                        String cmd = readMsg.getCmd();
-                        Fragment fragment = null;
-                        if (cmd.equals(SocketCmd.BluffDice) || cmd.equals(SocketCmd.BluffDice_Open_Resp)) {
-                            BluffDiceFragment bluffDiceFragment = getBluffDiceFragment();
-                            if (cmd.equals(SocketCmd.BluffDice)){
-                                int[] ids = new Gson().fromJson(readMsg.getBody() , int[].class);
-                                bluffDiceFragment.refreshDices(ids);
-                            }else{
-                                Map<String , int[]> map = new Gson().fromJson(readMsg.getBody(), new TypeToken<Map<String,int[]>>(){}.getType());
-                                bluffDiceFragment.showResult(map);
-                            }
-                            fragment = bluffDiceFragment;
-                        }else if (cmd.equals(SocketCmd.CPoker)) {
-                            CPokerFragment cPokerFragment = getCPokerFragment();
-                            String[] cards = new Gson().fromJson(readMsg.getBody() , String[].class);
-                            cPokerFragment.refreshCards(cards);
-                            fragment = cPokerFragment;
-                        }
-                        if (fragment != null) {
-                            transaction.show(fragment);
-                            transaction.commit();
-                        }
+                        getParent().router((SocketMessage) msg.obj);
                     }
                     break;
             }
         }
     };
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -384,6 +268,5 @@ public class GameServerFragment extends Fragment{
 
         return view;
     }
-
 
 }

@@ -7,7 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+
 import org.bigsupersniper.wlangames.R;
+import org.bigsupersniper.wlangames.socket.SocketCmd;
+import org.bigsupersniper.wlangames.socket.SocketMessage;
 import org.bigsupersniper.wlangames.view.DragAdapter;
 import org.bigsupersniper.wlangames.view.DragGridView;
 
@@ -29,6 +33,7 @@ public class CPokerFragment extends Fragment {
     private DragAdapter dragAdapter;
     private List<Map<String, Integer>> list;
 
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view =  inflater.inflate(R.layout.fragment_c_poker, container, false);
@@ -59,6 +64,18 @@ public class CPokerFragment extends Fragment {
         return view;
     }
 
+    public void router(SocketMessage msg) {
+        int cmd = msg.getCmd();
+        switch (cmd){
+            case SocketCmd.CPoker_Send:
+                String[] cards = new Gson().fromJson(msg.getBody() , String[].class);
+                this.refreshCards(cards);
+                break;
+            default:
+                break;
+        }
+    }
+
     public void refreshCards(String[] cards){
         tvCPokerDesc.setText("上一局游戏时间 : " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
         tvCPokerCount.setText("游戏次数 : " + (++count) + " 次");
@@ -84,7 +101,6 @@ public class CPokerFragment extends Fragment {
         }
         dragAdapter = new DragAdapter(getActivity() , list);
         gvCPoker.setAdapter(dragAdapter);
-        //gvCPoker.setAdapter(new SimpleAdapter(getActivity(), list, R.layout.gv_c_poker_item, new String[]{ "src" }, new int[]{R.id.imgCard}));
     }
 
 }
