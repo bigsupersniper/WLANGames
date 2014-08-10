@@ -25,6 +25,8 @@ import org.bigsupersniper.wlangames.socket.SocketCmd;
 import org.bigsupersniper.wlangames.socket.SocketMessage;
 import org.bigsupersniper.wlangames.socket.SocketServer;
 
+import java.io.IOException;
+
 
 public class GameServerFragment extends Fragment {
 
@@ -60,12 +62,16 @@ public class GameServerFragment extends Fragment {
                     socketClient.send(SocketCmd.Client_Bind, socketClient.getId());
                     Toast.makeText(getActivity(), "连接服务器成功！", Toast.LENGTH_SHORT).show();
                     break;
+                case  SendWhats.Client_Connected_Error:
+                    swClient.setChecked(false);
+                    Toast.makeText(getActivity(), msg.obj.toString(), Toast.LENGTH_SHORT).show();
+                    break;
                 case SendWhats.Client_Disconnected:
                     etClientId.setEnabled(true);
                     etServerIp.setEnabled(true);
                     etServerPort.setEnabled(true);
                     swClient.setChecked(false);
-                    Toast.makeText(getActivity(), "已从服务器断开连接！", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), msg.obj.toString(), Toast.LENGTH_SHORT).show();
                     break;
                 case SendWhats.Client_ReadMessage:
                     if (msg.obj != null) {
@@ -102,13 +108,16 @@ public class GameServerFragment extends Fragment {
             serverRouter.broadcast(SocketCmd.Server_Closed, "服务已停止");
         }
     };
-
     private OnSocketClientListener onPoolSocketClientListener = new OnSocketClientListener() {
+        @Override
+        public void onConnected(SocketClient client) {
+            sendMessage(SendWhats.Toast_ShowMessage, client.getLocalIP() + " 已连接！");
+        }
 
         @Override
         public void onDisconnected(SocketClient client) {
             if (socketServer.remove(client)) {
-                sendMessage(SendWhats.Toast_ShowMessage, client.getLocalIP() + " 已断开连接！");
+                sendMessage(SendWhats.Toast_ShowMessage, client.getId() + " (" + client.getLocalIP() + ")" + " 已断开连接！");
             }
         }
 
@@ -135,8 +144,13 @@ public class GameServerFragment extends Fragment {
     private OnSocketClientListener onSocketClientListener = new OnSocketClientListener() {
 
         @Override
+        public void onConnected(SocketClient client) {
+
+        }
+
+        @Override
         public void onDisconnected(SocketClient client) {
-            sendMessage(SendWhats.Client_Disconnected, null);
+            sendMessage(SendWhats.Client_Disconnected, "已从服务器断开连接");
         }
 
         @Override
@@ -145,18 +159,26 @@ public class GameServerFragment extends Fragment {
 
         @Override
         public void onRead(SocketClient client, SocketMessage msg) {
+            int what = SendWhats.Client_ReadMessage;
+            Object obj = null;
             switch (msg.getCmd()) {
                 case SocketCmd.Client_Connected:
-                    sendMessage(SendWhats.Client_Connected, null);
+                    what = SendWhats.Client_Connected ;
                     break;
                 case SocketCmd.Client_Disconnected:
+                    what = SendWhats.Client_Disconnected;
+                    obj = client.getLocalIP() + " 已断开连接";
+                    break;
                 case SocketCmd.Server_Closed:
-                    sendMessage(SendWhats.Client_Disconnected, null);
+                    what = SendWhats.Client_Disconnected;
+                    obj = "服务器已关闭连接";
                     break;
                 default:
-                    sendMessage(SendWhats.Client_ReadMessage, msg);
+                    obj = msg;
                     break;
             }
+
+            sendMessage(what, obj);
         }
 
         @Override
@@ -202,13 +224,6 @@ public class GameServerFragment extends Fragment {
         });
     }
 
-    private void sendMessage(int what, Object obj) {
-        Message msg = new Message();
-        msg.what = what;
-        msg.obj = obj;
-        handler.sendMessage(msg);
-    }
-
     private void initClientView(View view) {
         etServerIp = (EditText) view.findViewById(R.id.etServerIP);
         etServerPort = (EditText) view.findViewById(R.id.etServerPort);
@@ -242,8 +257,8 @@ public class GameServerFragment extends Fragment {
                                 socketClient.setId(clientId);
                                 socketClient.setOnSocketClientListener(onSocketClientListener);
                                 socketClient.connect(ip, port);
-                            } catch (Exception e) {
-                                e.printStackTrace();
+                            } catch (IOException e) {
+                                sendMessage(SendWhats.Client_Connected_Error, e.getMessage());
                             }
                         }
                     }).start();
@@ -256,6 +271,13 @@ public class GameServerFragment extends Fragment {
 
     private IndexActivity getParent() {
         return (IndexActivity) getActivity();
+    }
+
+    private void sendMessage(int what, Object obj) {
+        Message msg = new Message();
+        msg.what = what;
+        msg.obj = obj;
+        handler.sendMessage(msg);
     }
 
     @Override

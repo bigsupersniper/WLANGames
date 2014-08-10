@@ -21,6 +21,56 @@ public class SocketClient {
     private ThreadPoolExecutor sendPoolExecutor;
     private Selector selector;
     private ByteBuffer readBuffer;
+    private ByteBuffer sendBuffer;
+    private String localIP;
+    private String remoteIP;
+    private String id;
+    private OnSocketClientListener onSocketClientListener;
+
+    public SocketClient() {
+
+    }
+
+    public SocketClient(SocketChannel channel) {
+        this.channel = channel;
+        this.init();
+        this.localIP = channel.socket().getRemoteSocketAddress().toString().replace("/", "");
+        this.remoteIP = channel.socket().getLocalSocketAddress().toString().replace("/", "");
+    }
+
+    public void setOnSocketClientListener(OnSocketClientListener onSocketClientListener) {
+        this.onSocketClientListener = onSocketClientListener;
+    }
+
+    private void init() {
+        try {
+            sendPoolExecutor = new ThreadPoolExecutor(10, 20, 1, TimeUnit.HOURS, new LinkedBlockingQueue());
+            readBuffer = ByteBuffer.allocate(SocketUtils.BufferSize);
+            sendBuffer = ByteBuffer.allocate(SocketUtils.BufferSize);
+            selector = Selector.open();
+            this.connected = true;
+            channel.configureBlocking(false);
+            channel.register(selector, SelectionKey.OP_READ);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void connect(String ip, int port) throws IOException{
+        try {
+            if (channel == null) {
+                channel = SocketChannel.open();
+                channel.connect(new InetSocketAddress(ip, port));
+                this.init();
+                this.openRead();
+                this.localIP = channel.socket().getLocalSocketAddress().toString().replace("/", "");
+                this.remoteIP = channel.socket().getRemoteSocketAddress().toString().replace("/", "");
+            }
+        } catch (IOException e) {
+            throw e;
+        }
+    }
+
     private Runnable readRunnable = new Runnable() {
         @Override
         public void run() {
@@ -67,59 +117,11 @@ public class SocketClient {
             }
         }
     };
-    private ByteBuffer sendBuffer;
-    private String localIP;
-    private String remoteIP;
-    private String id;
-    private OnSocketClientListener onSocketClientListener;
-
-    public SocketClient() {
-
-    }
-
-    public SocketClient(SocketChannel channel) {
-        this.channel = channel;
-        this.init();
-        this.localIP = channel.socket().getRemoteSocketAddress().toString().replace("/", "");
-        this.remoteIP = channel.socket().getLocalSocketAddress().toString().replace("/", "");
-    }
-
-    public void setOnSocketClientListener(OnSocketClientListener onSocketClientListener) {
-        this.onSocketClientListener = onSocketClientListener;
-    }
-
-    private void init() {
-        try {
-            sendPoolExecutor = new ThreadPoolExecutor(10, 20, 1, TimeUnit.HOURS, new LinkedBlockingQueue());
-            readBuffer = ByteBuffer.allocate(SocketUtils.BufferSize);
-            sendBuffer = ByteBuffer.allocate(SocketUtils.BufferSize);
-            selector = Selector.open();
-            this.connected = true;
-            channel.configureBlocking(false);
-            channel.register(selector, SelectionKey.OP_READ);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void connect(String ip, int port) {
-        try {
-            if (channel == null) {
-                channel = SocketChannel.open();
-                channel.connect(new InetSocketAddress(ip, port));
-                this.init();
-                this.openRead();
-                this.localIP = channel.socket().getLocalSocketAddress().toString().replace("/", "");
-                this.remoteIP = channel.socket().getRemoteSocketAddress().toString().replace("/", "");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public void openRead() {
         synchronized (lock) {
             if (this.connected && !this.readStarted) {
+                onSocketClientListener.onConnected(this);
                 new Thread(readRunnable).start();
                 this.readStarted = true;
             }

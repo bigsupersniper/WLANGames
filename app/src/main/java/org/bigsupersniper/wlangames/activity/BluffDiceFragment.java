@@ -13,6 +13,7 @@ import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -103,6 +104,7 @@ public class BluffDiceFragment extends Fragment {
         if (!btnOpen.isShown()) {
             btnOpen.setVisibility(View.VISIBLE);
         }
+        Toast.makeText(getActivity() , "新的一局已开始" , Toast.LENGTH_SHORT).show();
         tvDiceDesc.setText("上一局游戏时间 : " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
         tvDiceCount.setText("游戏次数 : " + (++count) + " 次");
         if (!player.isPlaying()) {
@@ -115,6 +117,10 @@ public class BluffDiceFragment extends Fragment {
             Map<String, Integer> map = new HashMap<String, Integer>();
             map.put("src", res[i]);
             list.add(map);
+        }
+
+        if (resultDialog != null && resultDialog.isShowing()) {
+            resultDialog.dismiss();
         }
 
         gvDices.setAdapter(new SimpleAdapter(getActivity(), list, R.layout.gv_bluff_dice_item, new String[]{"src"}, new int[]{R.id.imgDice}));
