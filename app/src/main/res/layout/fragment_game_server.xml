@@ -13,9 +13,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="left|top"
-        android:layout_marginTop="10dp"
-        android:focusableInTouchMode="true"
-        android:focusable="true">
+        android:layout_marginTop="10dp">
 
         <TextView
             android:id="@+id/textView5"
@@ -67,7 +65,7 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:focusable="false"
+            android:focusable="true"
             android:text="服务端设置"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="#ff16afff"
@@ -121,7 +119,9 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/rlServer"
         android:layout_gravity="left|top"
-        android:layout_marginTop="45dp">
+        android:layout_marginTop="45dp"
+        android:focusableInTouchMode="true"
+        android:focusable="true">
 
         <EditText
             android:id="@+id/etServerPort"
