@@ -2,224 +2,227 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context="org.bigsupersniper.wlangames.activity.GameServerFragment">
 
     <RelativeLayout
+        android:id="@+id/rlServer"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="left|top"
-        android:id="@+id/rlServer"
-        android:layout_marginTop="10dp">
+        android:layout_marginTop="10dp"
+        android:focusableInTouchMode="true"
+        android:focusable="true">
 
         <TextView
+            android:id="@+id/textView5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="监听地址："
-            android:id="@+id/textView5"
-            android:layout_below="@+id/tvDiceDesc"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
+            android:layout_below="@+id/tvDiceDesc"
+            android:layout_marginLeft="10dp"
             android:layout_marginTop="15dp"
-            android:layout_marginLeft="10dp" />
+            android:text="监听地址："
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
             android:id="@+id/tvIP"
-            android:layout_alignTop="@+id/textView5"
-            android:layout_toRightOf="@+id/textView5"
-            android:layout_marginLeft="8dp" />
-
-        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="监听端口："
+            android:layout_alignTop="@+id/textView5"
+            android:layout_marginLeft="8dp"
+            android:layout_toRightOf="@+id/textView5"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <TextView
             android:id="@+id/textView3"
-            android:layout_below="@+id/textView5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignLeft="@+id/textView5"
             android:layout_alignStart="@+id/textView5"
-            android:layout_marginTop="15dp" />
+            android:layout_below="@+id/textView5"
+            android:layout_marginTop="15dp"
+            android:text="监听端口："
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <EditText
+            android:id="@+id/etPort"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/etPort"
-            android:minWidth="75dp"
             android:layout_alignTop="@+id/textView3"
-            android:layout_toRightOf="@+id/textView3"
-            android:text="1206"
             android:layout_marginTop="-10dp"
-            android:numeric="integer" />
+            android:layout_toRightOf="@+id/textView3"
+            android:minWidth="75dp"
+            android:numeric="integer"
+            android:text="1206" />
 
         <TextView
+            android:id="@+id/tvDiceDesc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="服务端设置"
-            android:id="@+id/tvDiceDesc"
-            android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:textSize="21dp"
-            android:textColor="#ff16afff" />
+            android:layout_alignParentTop="true"
+            android:focusable="false"
+            android:text="服务端设置"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="#ff16afff"
+            android:textSize="21dp" />
 
         <Switch
+            android:id="@+id/swServer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/swServer"
-            android:textOff="停止"
-            android:textOn="开启"
-            android:singleLine="false"
-            android:checked="false"
+            android:layout_below="@+id/etPort"
+            android:layout_marginLeft="30dp"
             android:layout_toEndOf="@+id/etPort"
             android:layout_toRightOf="@+id/etCount"
-            android:layout_below="@+id/etPort"
-            android:layout_marginLeft="30dp" />
+            android:checked="false"
+            android:singleLine="false"
+            android:textOff="停止"
+            android:textOn="开启" />
 
         <TextView
+            android:id="@+id/tvClientIP"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="最大连接数："
-            android:id="@+id/tvClientIP"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_below="@+id/textView3"
+            android:layout_marginLeft="10dp"
             android:layout_marginTop="15dp"
-            android:layout_marginLeft="10dp" />
+            android:text="最大连接数："
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <EditText
+            android:id="@+id/etCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/etCount"
-            android:minWidth="50dp"
-            android:text="6"
-            android:numeric="integer"
-            android:layout_below="@+id/textView3"
-            android:layout_toRightOf="@+id/tvClientIP"
-            android:layout_toEndOf="@+id/tvClientIP"
+            android:layout_alignEnd="@+id/etPort"
             android:layout_alignRight="@+id/etPort"
-            android:layout_alignEnd="@+id/etPort" />
+            android:layout_below="@+id/textView3"
+            android:layout_toEndOf="@+id/tvClientIP"
+            android:layout_toRightOf="@+id/tvClientIP"
+            android:minWidth="50dp"
+            android:numeric="integer"
+            android:text="6" />
 
     </RelativeLayout>
 
     <RelativeLayout
+        android:id="@+id/rlClient"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="left|top"
-        android:id="@+id/rlClient"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="45dp"
-        android:layout_below="@+id/rlServer">
+        android:layout_below="@+id/rlServer"
+        android:layout_gravity="left|top"
+        android:layout_marginTop="45dp">
 
         <EditText
+            android:id="@+id/etServerPort"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/etServerPort"
-            android:minWidth="75dp"
             android:layout_alignTop="@+id/textView10"
-            android:layout_toRightOf="@+id/textView10"
-            android:text="1206"
             android:layout_marginTop="-10dp"
-            android:numeric="integer" />
+            android:layout_toRightOf="@+id/textView10"
+            android:minWidth="75dp"
+            android:numeric="integer"
+            android:text="1206" />
 
         <TextView
+            android:id="@+id/textView8"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="服务器地址："
-            android:id="@+id/textView8"
-            android:layout_below="@+id/textView6"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
+            android:layout_below="@+id/textView6"
+            android:layout_marginLeft="10dp"
             android:layout_marginTop="15dp"
-            android:layout_marginLeft="10dp" />
+            android:text="服务器地址："
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
+            android:id="@+id/textView10"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="服务器端口："
-            android:id="@+id/textView10"
-            android:layout_below="@+id/textView8"
             android:layout_alignLeft="@+id/textView8"
             android:layout_alignStart="@+id/textView8"
-            android:layout_marginTop="20dp" />
+            android:layout_below="@+id/textView8"
+            android:layout_marginTop="20dp"
+            android:text="服务器端口："
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
+            android:id="@+id/textView12"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="客户端设置"
-            android:id="@+id/textView12"
-            android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:textSize="21dp"
-            android:textColor="#ff16afff" />
+            android:layout_alignParentTop="true"
+            android:text="客户端设置"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="#ff16afff"
+            android:textSize="21dp" />
 
         <EditText
+            android:id="@+id/etServerIP"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/etServerIP"
-            android:minWidth="180dp"
-            android:layout_toRightOf="@+id/textView8"
-            android:layout_marginTop="-10dp"
             android:layout_alignTop="@+id/textView8"
+            android:layout_marginTop="-10dp"
+            android:layout_toRightOf="@+id/textView8"
+            android:minWidth="180dp"
             android:numeric="integer" />
 
         <TextView
+            android:id="@+id/textView6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="客户端标识："
-            android:id="@+id/textView6"
-            android:layout_below="@+id/textView12"
             android:layout_alignLeft="@+id/textView10"
-            android:layout_marginTop="15dp" />
+            android:layout_below="@+id/textView12"
+            android:layout_marginTop="15dp"
+            android:text="客户端标识："
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <EditText
+            android:id="@+id/etClientId"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/etClientId"
-            android:layout_toRightOf="@+id/textView6"
             android:layout_alignBottom="@+id/textView6"
+            android:layout_alignEnd="@+id/etServerIP"
             android:layout_alignRight="@+id/etServerIP"
-            android:layout_alignEnd="@+id/etServerIP" />
+            android:layout_toRightOf="@+id/textView6" />
 
         <Switch
+            android:id="@+id/swClient"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/swClient"
-            android:textOff="断开"
-            android:textOn="连接"
-            android:singleLine="false"
-            android:checked="false"
-            android:layout_alignWithParentIfMissing="false"
             android:layout_alignBottom="@+id/etServerPort"
-            android:layout_toRightOf="@+id/etServerPort"
+            android:layout_alignWithParentIfMissing="false"
+            android:layout_marginLeft="20dp"
             android:layout_toEndOf="@+id/etServerPort"
-            android:layout_marginLeft="20dp" />
+            android:layout_toRightOf="@+id/etServerPort"
+            android:checked="false"
+            android:singleLine="false"
+            android:textOff="断开"
+            android:textOn="连接" />
 
     </RelativeLayout>
 
     <TextView
+        android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="WLAN Games © LINFENG 2014"
-        android:id="@+id/textView2"
-        android:layout_marginTop="116dp"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentTop="false"
         android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true" />
+        android:layout_marginTop="116dp"
+        android:text="WLAN Games © LINFENG 2014"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
 </RelativeLayout>

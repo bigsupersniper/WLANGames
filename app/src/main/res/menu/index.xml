@@ -1,20 +1,24 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".IndexActivity" >
-    <item android:id="@+id/action_server_status"
-        android:title="@string/action_server_status"
+    tools:context=".IndexActivity">
+    <item
+        android:id="@+id/action_server_status"
         android:orderInCategory="100"
-        android:showAsAction="never" />
-    <item android:id="@+id/action_next"
-        android:title="@string/action_next"
+        android:showAsAction="never"
+        android:title="@string/action_server_status" />
+    <item
+        android:id="@+id/action_next"
         android:orderInCategory="100"
-        android:showAsAction="never" />
-    <item android:id="@+id/action_client_status"
-        android:title="@string/action_client_status"
+        android:showAsAction="never"
+        android:title="@string/action_next" />
+    <item
+        android:id="@+id/action_client_status"
         android:orderInCategory="100"
-        android:showAsAction="never" />
-    <item android:id="@+id/action_exit"
-        android:title="@string/action_exit"
+        android:showAsAction="never"
+        android:title="@string/action_client_status" />
+    <item
+        android:id="@+id/action_exit"
         android:orderInCategory="100"
-        android:showAsAction="never" />
+        android:showAsAction="never"
+        android:title="@string/action_exit" />
 </menu>

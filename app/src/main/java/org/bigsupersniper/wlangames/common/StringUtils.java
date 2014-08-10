@@ -8,13 +8,13 @@ import java.util.Random;
  */
 public class StringUtils {
 
-    public static String getRandom(int length){
+    public static String getRandom(int length) {
         char[] chars = new char[length];
         Random r = new Random(new Date().getTime());
-        while (length > 0){
+        while (length > 0) {
             int n = r.nextInt(123);
-            if ((n >= 65 && n <= 90) || n >= 97){
-                chars[length - 1] = (char)n;
+            if ((n >= 65 && n <= 90) || n >= 97) {
+                chars[length - 1] = (char) n;
                 length--;
             }
         }

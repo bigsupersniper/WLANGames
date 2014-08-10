@@ -34,31 +34,31 @@ import java.util.Map;
 public class BluffDiceFragment extends Fragment {
 
     private MediaPlayer player;
-    private GridView gvDices ;
+    private GridView gvDices;
     private TextView tvDiceDesc;
     private TextView tvDiceCount;
     private Button btnOpen;
     private int count = 0;
     private AlertDialog resultDialog;
-    private Map<String , int[]> lastResultHistory;
+    private Map<String, int[]> lastResultHistory;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bluff_dice, container, false);
 
-        tvDiceCount = (TextView)view.findViewById(R.id.textView20);
-        tvDiceDesc = (TextView)view.findViewById(R.id.tvDiceDesc);
+        tvDiceCount = (TextView) view.findViewById(R.id.textView20);
+        tvDiceDesc = (TextView) view.findViewById(R.id.tvDiceDesc);
         tvDiceCount.setText("游戏次数 : " + count + " 次");
-        gvDices = (GridView)view.findViewById(R.id.gvDices);
-        btnOpen = (Button)view.findViewById(R.id.btnOpen);
+        gvDices = (GridView) view.findViewById(R.id.gvDices);
+        btnOpen = (Button) view.findViewById(R.id.btnOpen);
         btnOpen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 //若已请求结果则不重复发送请求
-                if (lastResultHistory == null){
+                if (lastResultHistory == null) {
                     getParent().sendCmd(SocketCmd.BluffDice_Open);
-                }else{
+                } else {
                     showDices(lastResultHistory);
                 }
             }
@@ -76,20 +76,21 @@ public class BluffDiceFragment extends Fragment {
         return view;
     }
 
-    private IndexActivity getParent(){
-        return (IndexActivity)getActivity();
+    private IndexActivity getParent() {
+        return (IndexActivity) getActivity();
     }
 
     public void router(SocketMessage msg) {
         int cmd = msg.getCmd();
-        switch (cmd){
+        switch (cmd) {
             case SocketCmd.BluffDice_Send:
-                int[] ids = new Gson().fromJson(msg.getBody() , int[].class);
+                int[] ids = new Gson().fromJson(msg.getBody(), int[].class);
                 this.refreshDices(ids);
                 this.lastResultHistory = null;
                 break;
             case SocketCmd.BluffDice_Open_Resp:
-                lastResultHistory = new Gson().fromJson(msg.getBody(), new TypeToken<Map<String,int[]>>(){}.getType());
+                lastResultHistory = new Gson().fromJson(msg.getBody(), new TypeToken<Map<String, int[]>>() {
+                }.getType());
                 this.showDices(lastResultHistory);
                 break;
             default:
@@ -97,9 +98,9 @@ public class BluffDiceFragment extends Fragment {
         }
     }
 
-    public void refreshDices(int[] ids){
+    public void refreshDices(int[] ids) {
         if (ids.length < 5) return;
-        if (!btnOpen.isShown()){
+        if (!btnOpen.isShown()) {
             btnOpen.setVisibility(View.VISIBLE);
         }
         tvDiceDesc.setText("上一局游戏时间 : " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
@@ -116,10 +117,10 @@ public class BluffDiceFragment extends Fragment {
             list.add(map);
         }
 
-        gvDices.setAdapter(new SimpleAdapter(getActivity(), list, R.layout.gv_bluff_dice_item, new String[]{ "src" }, new int[]{R.id.imgDice}));
+        gvDices.setAdapter(new SimpleAdapter(getActivity(), list, R.layout.gv_bluff_dice_item, new String[]{"src"}, new int[]{R.id.imgDice}));
     }
 
-    public void showDices(Map<String, int[]> map){
+    public void showDices(Map<String, int[]> map) {
         if (!map.isEmpty()) {
             Activity _that = getActivity();
             List<Map<String, Object>> adapterList = new ArrayList<Map<String, Object>>();

@@ -9,7 +9,7 @@ public interface OnSocketClientListener {
 
     public void onMessage(String message);
 
-    public void onRead(SocketClient client , SocketMessage msg);
+    public void onRead(SocketClient client, SocketMessage msg);
 
-    public void onSend(SocketClient client , SocketMessage msg);
+    public void onSend(SocketClient client, SocketMessage msg);
 }

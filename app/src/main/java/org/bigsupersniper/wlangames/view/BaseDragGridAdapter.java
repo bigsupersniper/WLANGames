@@ -6,6 +6,7 @@ package org.bigsupersniper.wlangames.view;
 public interface BaseDragGridAdapter {
     /**
      * 重新排列数据
+     *
      * @param oldPosition
      * @param newPosition
      */
@@ -14,6 +15,7 @@ public interface BaseDragGridAdapter {
 
     /**
      * 设置某个item隐藏
+     *
      * @param hidePosition
      */
     public void setHideItem(int hidePosition);

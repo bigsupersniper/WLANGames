@@ -21,7 +21,7 @@ public class DragAdapter extends BaseAdapter implements BaseDragGridAdapter {
     private LayoutInflater mInflater;
     private int mHidePosition = -1;
 
-    public DragAdapter(Context context, List<Map<String, Integer>> list){
+    public DragAdapter(Context context, List<Map<String, Integer>> list) {
         this.list = list;
         mInflater = LayoutInflater.from(context);
     }
@@ -50,7 +50,7 @@ public class DragAdapter extends BaseAdapter implements BaseDragGridAdapter {
         ImageView mImageView = (ImageView) convertView.findViewById(R.id.imgCard);
         mImageView.setImageResource((Integer) list.get(position).get("src"));
 
-        if(position == mHidePosition){
+        if (position == mHidePosition) {
             convertView.setVisibility(View.INVISIBLE);
         }
 
@@ -61,13 +61,13 @@ public class DragAdapter extends BaseAdapter implements BaseDragGridAdapter {
     @Override
     public void reorderItems(int oldPosition, int newPosition) {
         Map<String, Integer> temp = list.get(oldPosition);
-        if(oldPosition < newPosition){
-            for(int i=oldPosition; i<newPosition; i++){
+        if (oldPosition < newPosition) {
+            for (int i = oldPosition; i < newPosition; i++) {
                 Collections.swap(list, i, i + 1);
             }
-        }else if(oldPosition > newPosition){
-            for(int i=oldPosition; i>newPosition; i--){
-                Collections.swap(list, i, i-1);
+        } else if (oldPosition > newPosition) {
+            for (int i = oldPosition; i > newPosition; i--) {
+                Collections.swap(list, i, i - 1);
             }
         }
 

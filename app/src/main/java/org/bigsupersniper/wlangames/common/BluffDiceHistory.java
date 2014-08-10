@@ -7,17 +7,17 @@ import java.util.Map;
  * Created by sniper on 2014/8/5.
  */
 public class BluffDiceHistory {
-    private Map<String , int[]> map = new HashMap<String, int[]>();
-    private static BluffDiceHistory instance ;
+    private static BluffDiceHistory instance;
+    private Map<String, int[]> map = new HashMap<String, int[]>();
 
-    private BluffDiceHistory(){
+    private BluffDiceHistory() {
 
     }
 
-    public static BluffDiceHistory getInstance(){
-        if (instance == null){
-            synchronized (BluffDiceHistory.class){
-                if (instance == null){
+    public static BluffDiceHistory getInstance() {
+        if (instance == null) {
+            synchronized (BluffDiceHistory.class) {
+                if (instance == null) {
                     instance = new BluffDiceHistory();
                 }
             }
@@ -25,19 +25,19 @@ public class BluffDiceHistory {
         return instance;
     }
 
-    public synchronized void add(String id , int[] dices){
-        if (!map.containsKey(id)){
-            map.put(id , dices);
+    public synchronized void add(String id, int[] dices) {
+        if (!map.containsKey(id)) {
+            map.put(id, dices);
         }
     }
 
-    public synchronized void reset(){
+    public synchronized void reset() {
         if (!map.isEmpty()) {
             map.clear();
         }
     }
 
-    public synchronized Map<String , int[]> getAll(){
+    public synchronized Map<String, int[]> getAll() {
         return map;
     }
 

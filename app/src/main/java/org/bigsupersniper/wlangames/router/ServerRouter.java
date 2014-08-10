@@ -22,15 +22,15 @@ public class ServerRouter {
 
     private SocketServer server;
 
-    public ServerRouter(SocketServer server){
+    public ServerRouter(SocketServer server) {
         this.server = server;
     }
 
-    public void broadcast(int cmd){
+    public void broadcast(int cmd) {
         List<SocketClient> clients = server.getList();
         if (clients.size() > 0) {
             Iterator<SocketClient> iterator = clients.iterator();
-            switch (cmd){
+            switch (cmd) {
                 case SocketCmd.BluffDice_Send:
                     //clear history
                     BluffDiceHistory.getInstance().reset();
@@ -55,26 +55,26 @@ public class ServerRouter {
 
                     int n = random.nextInt(4);
 
-                    while (iterator.hasNext()){
+                    while (iterator.hasNext()) {
                         SocketClient client = iterator.next();
                         while (true) {
                             if (!deals[n]) {
                                 deals[n] = true;
-                                client.send(SocketCmd.CPoker_Send , new Gson().toJson(CPoker.deal(shuffledCards, n)) );
+                                client.send(SocketCmd.CPoker_Send, new Gson().toJson(CPoker.deal(shuffledCards, n)));
                                 size--;
                                 break;
                             } else {
                                 n = random.nextInt(4);
                             }
                         }
-                        if(size <= 0) break;
+                        if (size <= 0) break;
                     }
                     break;
             }
         }
     }
 
-    public void broadcast(int cmd , String body){
+    public void broadcast(int cmd, String body) {
         List<SocketClient> clients = server.getList();
         if (clients.size() > 0) {
             Iterator<SocketClient> iterator = clients.iterator();
@@ -84,14 +84,14 @@ public class ServerRouter {
         }
     }
 
-    public void router(SocketClient client , SocketMessage msg){
+    public void router(SocketClient client, SocketMessage msg) {
         int cmd = msg.getCmd();
-        switch (cmd){
+        switch (cmd) {
             case SocketCmd.Client_Bind:
                 client.setId(msg.getBody());
                 break;
             case SocketCmd.BluffDice_Open:
-                broadcast(SocketCmd.BluffDice_Open_Resp , new Gson().toJson(BluffDiceHistory.getInstance().getAll()));
+                broadcast(SocketCmd.BluffDice_Open_Resp, new Gson().toJson(BluffDiceHistory.getInstance().getAll()));
                 break;
             default:
                 break;

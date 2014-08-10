@@ -21,56 +21,6 @@ public class SocketClient {
     private ThreadPoolExecutor sendPoolExecutor;
     private Selector selector;
     private ByteBuffer readBuffer;
-    private ByteBuffer sendBuffer;
-    private String localIP;
-    private String remoteIP;
-    private String id ;
-    private OnSocketClientListener onSocketClientListener ;
-
-    public SocketClient(){
-
-    }
-
-    public SocketClient(SocketChannel channel){
-        this.channel = channel;
-        this.init();
-        this.localIP = channel.socket().getRemoteSocketAddress().toString().replace("/","");
-        this.remoteIP = channel.socket().getLocalSocketAddress().toString().replace("/","");
-    }
-
-    public void setOnSocketClientListener(OnSocketClientListener onSocketClientListener){
-        this.onSocketClientListener = onSocketClientListener;
-    }
-
-    private void init(){
-        try {
-            sendPoolExecutor = new ThreadPoolExecutor(10 , 20 , 1 , TimeUnit.HOURS , new LinkedBlockingQueue());
-            readBuffer = ByteBuffer.allocate(SocketUtils.BufferSize);
-            sendBuffer = ByteBuffer.allocate(SocketUtils.BufferSize);
-            selector = Selector.open();
-            this.connected = true;
-            channel.configureBlocking(false);
-            channel.register(selector, SelectionKey.OP_READ);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void connect(String ip , int port){
-        try {
-            if (channel == null){
-                channel = SocketChannel.open();
-                channel.connect(new InetSocketAddress(ip, port));
-                this.init();
-                this.openRead();
-                this.localIP = channel.socket().getLocalSocketAddress().toString().replace("/","");
-                this.remoteIP = channel.socket().getRemoteSocketAddress().toString().replace("/","");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private Runnable readRunnable = new Runnable() {
         @Override
         public void run() {
@@ -89,7 +39,7 @@ public class SocketClient {
                             while ((len = sc.read(readBuffer)) > 0) {
                                 byte[] buffer = readBuffer.array();
                                 if (buffer[len - 1] == SocketUtils.EndByte) {
-                                    sb.append(new String(buffer, 0,len - 1, SocketUtils.MessageCharset));
+                                    sb.append(new String(buffer, 0, len - 1, SocketUtils.MessageCharset));
                                     break;
                                 } else {
                                     sb.append(new String(buffer, 0, len, SocketUtils.MessageCharset));
@@ -98,14 +48,14 @@ public class SocketClient {
                             }
 
                             if (sb.length() > 0) {
-                                try{
+                                try {
                                     SocketMessage msg = new Gson().fromJson(sb.toString(), SocketMessage.class);
-                                    onSocketClientListener.onRead(SocketClient.this , msg);
-                                }catch (Exception  e){
+                                    onSocketClientListener.onRead(SocketClient.this, msg);
+                                } catch (Exception e) {
                                     e.printStackTrace();
                                     break;
                                 }
-                            }else{
+                            } else {
                                 disconnect();
                                 break;
                             }
@@ -117,17 +67,66 @@ public class SocketClient {
             }
         }
     };
+    private ByteBuffer sendBuffer;
+    private String localIP;
+    private String remoteIP;
+    private String id;
+    private OnSocketClientListener onSocketClientListener;
 
-    public void openRead(){
-        synchronized (lock){
-            if (this.connected && !this.readStarted){
+    public SocketClient() {
+
+    }
+
+    public SocketClient(SocketChannel channel) {
+        this.channel = channel;
+        this.init();
+        this.localIP = channel.socket().getRemoteSocketAddress().toString().replace("/", "");
+        this.remoteIP = channel.socket().getLocalSocketAddress().toString().replace("/", "");
+    }
+
+    public void setOnSocketClientListener(OnSocketClientListener onSocketClientListener) {
+        this.onSocketClientListener = onSocketClientListener;
+    }
+
+    private void init() {
+        try {
+            sendPoolExecutor = new ThreadPoolExecutor(10, 20, 1, TimeUnit.HOURS, new LinkedBlockingQueue());
+            readBuffer = ByteBuffer.allocate(SocketUtils.BufferSize);
+            sendBuffer = ByteBuffer.allocate(SocketUtils.BufferSize);
+            selector = Selector.open();
+            this.connected = true;
+            channel.configureBlocking(false);
+            channel.register(selector, SelectionKey.OP_READ);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void connect(String ip, int port) {
+        try {
+            if (channel == null) {
+                channel = SocketChannel.open();
+                channel.connect(new InetSocketAddress(ip, port));
+                this.init();
+                this.openRead();
+                this.localIP = channel.socket().getLocalSocketAddress().toString().replace("/", "");
+                this.remoteIP = channel.socket().getRemoteSocketAddress().toString().replace("/", "");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void openRead() {
+        synchronized (lock) {
+            if (this.connected && !this.readStarted) {
                 new Thread(readRunnable).start();
                 this.readStarted = true;
             }
         }
     }
 
-    public void send(final SocketMessage msg){
+    public void send(final SocketMessage msg) {
         sendPoolExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -137,7 +136,7 @@ public class SocketClient {
                     sendBuffer.flip();
                     channel.write(sendBuffer);
                     sendBuffer.clear();
-                    onSocketClientListener.onSend(SocketClient.this , msg);
+                    onSocketClientListener.onSend(SocketClient.this, msg);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -145,7 +144,7 @@ public class SocketClient {
         });
     }
 
-    public void send(int cmd , String body){
+    public void send(int cmd, String body) {
         SocketMessage msg = new SocketMessage();
         msg.setFrom(this.localIP);
         msg.setTo(this.remoteIP);
@@ -155,38 +154,38 @@ public class SocketClient {
         this.send(msg);
     }
 
-    public boolean isConnected(){
+    public boolean isConnected() {
         return this.connected;
     }
 
-    public String getLocalIP(){
+    public String getLocalIP() {
         return this.localIP;
     }
 
-    public String getRemoteIP(){
+    public String getRemoteIP() {
         return this.remoteIP;
     }
 
-    public void setId(String id){
-        this.id = id;
-    }
-
-    public String getId(){
+    public String getId() {
         return this.id;
     }
 
-    public void disconnect(){
-        synchronized (lock){
-            if (this.connected){
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void disconnect() {
+        synchronized (lock) {
+            if (this.connected) {
                 this.connected = false;
                 this.onSocketClientListener.onDisconnected(this);
                 try {
-                    if (channel.isConnected()){
+                    if (channel.isConnected()) {
                         channel.socket().shutdownInput();
                         channel.socket().shutdownOutput();
                         channel.close();
                     }
-                    if (selector.isOpen()){
+                    if (selector.isOpen()) {
                         selector.close();
                     }
                 } catch (IOException e) {
