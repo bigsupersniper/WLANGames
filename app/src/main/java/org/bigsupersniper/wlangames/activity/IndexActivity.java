@@ -150,7 +150,7 @@ public class IndexActivity extends Activity implements ActionBar.TabListener {
                             break;
                         case 2:
                             //serverRouter.broadcast(SocketCmd.CPoker_Send);
-                            Toast.makeText(this, "未完全实现", Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "未实现", Toast.LENGTH_LONG).show();
                             break;
                     }
                 } else {

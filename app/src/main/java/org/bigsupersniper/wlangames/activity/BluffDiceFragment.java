@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ListView;
@@ -39,9 +40,11 @@ public class BluffDiceFragment extends Fragment {
     private TextView tvDiceDesc;
     private TextView tvDiceCount;
     private Button btnOpen;
+    private ListView lvHistory;
     private int count = 0;
     private AlertDialog resultDialog;
     private Map<String, int[]> lastResultHistory;
+    private List<String> diceHistory = new ArrayList<String>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -74,6 +77,8 @@ public class BluffDiceFragment extends Fragment {
             }
         });
 
+        lvHistory = (ListView)view.findViewById(R.id.lvHistory);
+
         return view;
     }
 
@@ -97,6 +102,18 @@ public class BluffDiceFragment extends Fragment {
             default:
                 break;
         }
+    }
+
+    public void refreshHistory(int[] ids){
+        String history = "第" + count + "次： " ;
+        for (int i = 0 ; i < ids.length ; i++){
+            int x = ids[i] + 1;
+            history += x + "   ";
+        }
+        diceHistory.add(0, history);
+
+        lvHistory.setAdapter(new ArrayAdapter<String>(getActivity() , R.layout.lv_bluff_dice_item
+                , R.id.tvDiceHistory , diceHistory));
     }
 
     public void refreshDices(int[] ids) {
@@ -124,6 +141,8 @@ public class BluffDiceFragment extends Fragment {
         }
 
         gvDices.setAdapter(new SimpleAdapter(getActivity(), list, R.layout.gv_bluff_dice_item, new String[]{"src"}, new int[]{R.id.imgDice}));
+        //bind history
+        refreshHistory(ids);
     }
 
     public void showDices(Map<String, int[]> map) {
