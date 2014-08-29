@@ -38,14 +38,36 @@ public class BluffDice {
 
     public static int[] shake() {
         int[] dices = new int[5];
-        Random r = new Random(new Date().getTime());
+        Random r = new Random(System.currentTimeMillis());
         for (int i = 0; i < dices.length; i++) {
-            dices[i] = r.nextInt(6);
+            int mod = r.nextInt(r.hashCode()) % nextInt(r , 1000);
+
+            while (true){
+                if (mod >= 0 && mod < 6) {
+                    break;
+                }else {
+                    mod = r.nextInt(r.hashCode()) % nextInt(r , 1000);
+                }
+            }
+
+            dices[i] = mod;
         }
         //排序
         Arrays.sort(dices);
 
         return dices;
+    }
+
+    private static int nextInt(Random r , int n){
+        int next = r.nextInt(n);
+        while (true) {
+            if (next > 1) {
+                break;
+            }else{
+                next = r.nextInt(n);
+            }
+        }
+        return next;
     }
 
     public static int[] toRes(int[] ids) {
