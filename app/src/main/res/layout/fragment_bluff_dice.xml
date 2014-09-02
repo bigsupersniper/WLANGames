@@ -14,17 +14,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:text="未开始游戏"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textSize="16dp" />
-
-    <TextView
-        android:id="@+id/textView20"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/tvDiceDesc"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <GridView
         android:id="@+id/gvDices"
@@ -32,9 +22,9 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/textView20"
+        android:layout_below="@+id/tvDiceDesc"
         android:layout_centerInParent="true"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="25dp"
         android:clickable="true"
         android:numColumns="5"
         android:verticalSpacing="10dp" />
@@ -50,21 +40,35 @@
 
         <Button
             android:id="@+id/btnOpen"
-            android:layout_width="75dp"
-            android:layout_height="wrap_content"
+            android:layout_width="108dp"
+            android:layout_height="54dp"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="15dp"
             android:text="开"
+            android:textSize="24dp"
+            android:visibility="invisible"/>
+
+        <TextView
+            android:id="@+id/tvLastHistory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/btnOpen"
+            android:layout_centerHorizontal="true"
+            android:text="最后5局记录"
+            android:layout_marginTop="15dp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
             android:visibility="invisible" />
 
         <ListView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/btnOpen"
+            android:layout_below="@+id/tvLastHistory"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="20dp"
             android:id="@+id/lvHistory"/>
 
     </RelativeLayout>

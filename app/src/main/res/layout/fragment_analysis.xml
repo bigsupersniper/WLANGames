@@ -14,9 +14,9 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:text="游戏分析统计"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textSize="16dp" />
+        android:text="总次数前十排行"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textSize="18dp" />
 
     <ListView
         android:id="@+id/lvDicesResult"

@@ -6,7 +6,7 @@
 
 
     <TextView
-        android:id="@+id/tvClientIP"
+        android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
@@ -21,8 +21,8 @@
         android:layout_alignParentTop="true"
         android:layout_marginLeft="5dp"
         android:layout_marginRight="5dp"
-        android:layout_toEndOf="@+id/tvClientIP"
-        android:layout_toRightOf="@+id/tvClientIP"
+        android:layout_toEndOf="@+id/tvTitle"
+        android:layout_toRightOf="@+id/tvTitle"
         android:clickable="false"
         android:numColumns="5"
         android:verticalSpacing="10dp" />

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">WLAN Games</string>
+    <string name="app_name">WLAN BluffDice</string>
     <string name="title_section1">服务设置</string>
-    <string name="title_section2">骰子乐</string>
+    <string name="title_section2">开始游戏</string>
     <string name="title_section3">统计分析</string>
     <string name="action_next">下一局</string>
     <string name="action_server_status">服务状态</string>

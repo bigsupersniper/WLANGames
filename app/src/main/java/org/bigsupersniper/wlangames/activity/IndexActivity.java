@@ -42,7 +42,7 @@ public class IndexActivity extends Activity implements ActionBar.TabListener {
     ActionBar actionBar;
     private GameServerFragment gameServerFragment;
     private BluffDiceFragment bluffDiceFragment;
-    private AnalysisFragment cPokerFragment;
+    private AnalysisFragment analysisFragment;
     private SocketServer socketServer;
     private ServerRouter serverRouter;
     private SocketClient socketClient;
@@ -97,15 +97,18 @@ public class IndexActivity extends Activity implements ActionBar.TabListener {
     public boolean onPrepareOptionsMenu(Menu menu) {
         if (socketServer != null && socketServer.isStarted()) {
             menu.getItem(0).setVisible(true);
-            menu.getItem(1).setVisible(mViewPager.getCurrentItem() != 0);
+            menu.getItem(1).setVisible(mViewPager.getCurrentItem() == 1);
         } else {
             menu.getItem(0).setVisible(false);
             menu.getItem(1).setVisible(false);
         }
 
         if (socketClient != null) {
-            menu.getItem(2).setVisible(mViewPager.getCurrentItem() == 1);
+            menu.getItem(2).setVisible(true);
+        }else{
+            menu.getItem(2).setVisible(false);
         }
+
 
         return true;
     }
@@ -165,6 +168,10 @@ public class IndexActivity extends Activity implements ActionBar.TabListener {
         // When the given tab is selected, switch to the corresponding page in
         // the ViewPager.
         mViewPager.setCurrentItem(tab.getPosition());
+
+        if (tab.getPosition() == 2){
+            analysisFragment.refreshAnalysis();
+        }
     }
 
     @Override
@@ -220,7 +227,7 @@ public class IndexActivity extends Activity implements ActionBar.TabListener {
 
             gameServerFragment = new GameServerFragment();
             bluffDiceFragment = new BluffDiceFragment();
-            cPokerFragment = new AnalysisFragment();
+            analysisFragment = new AnalysisFragment();
         }
 
         @Override
@@ -234,7 +241,7 @@ public class IndexActivity extends Activity implements ActionBar.TabListener {
                     fragment = bluffDiceFragment;
                     break;
                 case 2:
-                    fragment = cPokerFragment;
+                    fragment = analysisFragment;
                     break;
                 default:
                     break;

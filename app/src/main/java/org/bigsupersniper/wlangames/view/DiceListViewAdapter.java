@@ -46,12 +46,17 @@ public class DiceListViewAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View view, ViewGroup parent) {
         view = inflater.inflate(R.layout.dialog_dice_listview_item, null);
-        GridView gvDicesResult = (GridView) view.findViewById(R.id.gvDicesResult);
-        TextView tvClientIP = (TextView) view.findViewById(R.id.tvClientIP);
-        Map<String, Object> map = list.get(position);
-        tvClientIP.setText(map.get("id").toString());
-        List<Map<String, Integer>> list = (List<Map<String, Integer>>) map.get("diceList");
-        gvDicesResult.setAdapter(new SimpleAdapter(this.context, list, R.layout.gv_bluff_dice_item, new String[]{"src"}, new int[]{R.id.imgDice}));
+
+        try {
+            GridView gvDicesResult = (GridView) view.findViewById(R.id.gvDicesResult);
+            TextView tvTitle = (TextView) view.findViewById(R.id.tvTitle);
+            Map<String, Object> map = list.get(position);
+            tvTitle.setText(map.get("title").toString());
+            List<Map<String, Integer>> list = (List<Map<String, Integer>>) map.get("diceList");
+            gvDicesResult.setAdapter(new SimpleAdapter(this.context, list, R.layout.gv_bluff_dice_item, new String[]{"src"}, new int[]{R.id.imgDice}));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 
         return view;
     }

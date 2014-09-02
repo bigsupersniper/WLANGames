@@ -21,6 +21,8 @@ import com.google.gson.reflect.TypeToken;
 
 import org.bigsupersniper.wlangames.R;
 import org.bigsupersniper.wlangames.common.BluffDice;
+import org.bigsupersniper.wlangames.common.BluffDiceAnalysis;
+import org.bigsupersniper.wlangames.common.DiceAnalysis;
 import org.bigsupersniper.wlangames.socket.SocketCmd;
 import org.bigsupersniper.wlangames.socket.SocketMessage;
 import org.bigsupersniper.wlangames.view.DiceListViewAdapter;
@@ -38,24 +40,23 @@ public class BluffDiceFragment extends Fragment {
     private MediaPlayer player;
     private GridView gvDices;
     private TextView tvDiceDesc;
-    private TextView tvDiceCount;
     private Button btnOpen;
+    private TextView tvLastHistory;
     private ListView lvHistory;
     private int count = 0;
     private AlertDialog resultDialog;
     private Map<String, int[]> lastResultHistory;
-    private List<String> diceHistory = new ArrayList<String>();
+    private List<int[]> diceHistory = new ArrayList<int[]>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bluff_dice, container, false);
 
-        tvDiceCount = (TextView) view.findViewById(R.id.textView20);
         tvDiceDesc = (TextView) view.findViewById(R.id.tvDiceDesc);
-        tvDiceCount.setText("游戏次数 : " + count + " 次");
         gvDices = (GridView) view.findViewById(R.id.gvDices);
         btnOpen = (Button) view.findViewById(R.id.btnOpen);
+        tvLastHistory = (TextView) view.findViewById(R.id.tvLastHistory);
         btnOpen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -105,15 +106,43 @@ public class BluffDiceFragment extends Fragment {
     }
 
     public void refreshHistory(int[] ids){
-        String history = "第" + count + "次： " ;
+        String key ="";
         for (int i = 0 ; i < ids.length ; i++){
             int x = ids[i] + 1;
-            history += x + "   ";
+            key += x;
         }
-        diceHistory.add(0, history);
+        diceHistory.add(0, ids);
+        //add to analysis
+        BluffDiceAnalysis.getInstance().add(key , ids);
 
-        lvHistory.setAdapter(new ArrayAdapter<String>(getActivity() , R.layout.lv_bluff_dice_item
-                , R.id.tvDiceHistory , diceHistory));
+        List<Map<String, Object>> adapterList = new ArrayList<Map<String, Object>>();
+        int all = diceHistory.size();
+        int size = all;
+        if (diceHistory.size() >= 5){
+            size = 5;
+        }
+
+        if (size > 0){
+            Iterator<int[]> iterator = diceHistory.iterator();
+            while (iterator.hasNext()){
+                Map<String, Object> adapterMap = new HashMap<String, Object>();
+                List<Map<String, Integer>> list = new ArrayList<Map<String, Integer>>();
+                int[] res = BluffDice.toRes(iterator.next());
+                for (int j = 0; j < res.length; j++) {
+                    Map<String, Integer> m = new HashMap<String, Integer>();
+                    m.put("src", res[j]);
+                    list.add(m);
+                }
+
+                adapterMap.put("title", "第 " + (all--) + " 局");
+                adapterMap.put("diceList", list);
+                adapterList.add(adapterMap);
+
+                if (adapterList.size() == size) break;
+            }
+        }
+
+        lvHistory.setAdapter(new DiceListViewAdapter(getActivity(), adapterList));
     }
 
     public void refreshDices(int[] ids) {
@@ -121,9 +150,12 @@ public class BluffDiceFragment extends Fragment {
         if (!btnOpen.isShown()) {
             btnOpen.setVisibility(View.VISIBLE);
         }
-        Toast.makeText(getActivity() , "新的一局已开始" , Toast.LENGTH_SHORT).show();
-        tvDiceDesc.setText("上一局游戏时间 : " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
-        tvDiceCount.setText("游戏次数 : " + (++count) + " 次");
+        if (!tvLastHistory.isShown()){
+            tvLastHistory.setVisibility(View.VISIBLE);
+        }
+        count++;
+        Toast.makeText(getActivity() , "第 " + (count) + " 局游戏已开始" , Toast.LENGTH_SHORT).show();
+        tvDiceDesc.setText("第 " + (count) + " 局游戏开始于 : " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
         if (!player.isPlaying()) {
             player.start();
         }
@@ -153,17 +185,17 @@ public class BluffDiceFragment extends Fragment {
             Iterator<String> keys = map.keySet().iterator();
 
             while (keys.hasNext()) {
-                String id = keys.next();
+                String key = keys.next();
                 Map<String, Object> adapterMap = new HashMap<String, Object>();
                 List<Map<String, Integer>> list = new ArrayList<Map<String, Integer>>();
-                int[] res = BluffDice.toRes(map.get(id));
+                int[] res = BluffDice.toRes(map.get(key));
                 for (int i = 0; i < res.length; i++) {
                     Map<String, Integer> m = new HashMap<String, Integer>();
                     m.put("src", res[i]);
                     list.add(m);
                 }
 
-                adapterMap.put("id", id);
+                adapterMap.put("title", key);
                 adapterMap.put("diceList", list);
                 adapterList.add(adapterMap);
             }
@@ -176,7 +208,7 @@ public class BluffDiceFragment extends Fragment {
                 resultDialog.dismiss();
             }
 
-            resultDialog = new AlertDialog.Builder(_that).setTitle("上一局结果").setView(view).setNegativeButton("确定", null).show();
+            resultDialog = new AlertDialog.Builder(_that).setTitle("第 " + count + " 局结果").setView(view).setNegativeButton("确定", null).show();
         }
     }
 
