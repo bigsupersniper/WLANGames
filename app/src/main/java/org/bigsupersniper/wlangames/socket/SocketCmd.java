@@ -20,8 +20,4 @@ public class SocketCmd {
     public final static int BluffDice_Open = 0x10003;
     public final static int BluffDice_Open_Resp = 0x10004;
 
-    //十三水相关 0x10801 ~ 0x11000
-    public final static int CPoker_Send = 0x10801;
-    public final static int CPoker_Send_Resp = 0x10802;
-
 }

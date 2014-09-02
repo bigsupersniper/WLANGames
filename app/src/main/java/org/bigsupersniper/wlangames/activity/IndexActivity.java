@@ -42,7 +42,7 @@ public class IndexActivity extends Activity implements ActionBar.TabListener {
     ActionBar actionBar;
     private GameServerFragment gameServerFragment;
     private BluffDiceFragment bluffDiceFragment;
-    private CPokerFragment cPokerFragment;
+    private AnalysisFragment cPokerFragment;
     private SocketServer socketServer;
     private ServerRouter serverRouter;
     private SocketClient socketClient;
@@ -104,9 +104,7 @@ public class IndexActivity extends Activity implements ActionBar.TabListener {
         }
 
         if (socketClient != null) {
-            menu.getItem(2).setVisible(true);
-        } else {
-            menu.getItem(2).setVisible(false);
+            menu.getItem(2).setVisible(mViewPager.getCurrentItem() == 1);
         }
 
         return true;
@@ -147,10 +145,6 @@ public class IndexActivity extends Activity implements ActionBar.TabListener {
                     switch (mViewPager.getCurrentItem()) {
                         case 1:
                             serverRouter.broadcast(SocketCmd.BluffDice_Send);
-                            break;
-                        case 2:
-                            //serverRouter.broadcast(SocketCmd.CPoker_Send);
-                            Toast.makeText(this, "未实现", Toast.LENGTH_LONG).show();
                             break;
                     }
                 } else {
@@ -210,9 +204,6 @@ public class IndexActivity extends Activity implements ActionBar.TabListener {
                 mViewPager.setCurrentItem(1);
                 bluffDiceFragment.router(msg);
                 break;
-            case SocketCmd.CPoker_Send:
-                mViewPager.setCurrentItem(2);
-                cPokerFragment.router(msg);
             default:
                 break;
         }
@@ -229,7 +220,7 @@ public class IndexActivity extends Activity implements ActionBar.TabListener {
 
             gameServerFragment = new GameServerFragment();
             bluffDiceFragment = new BluffDiceFragment();
-            cPokerFragment = new CPokerFragment();
+            cPokerFragment = new AnalysisFragment();
         }
 
         @Override
