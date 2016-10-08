@@ -13,6 +13,7 @@ public class SocketCmd {
     public final static int Client_Disconnected = 0x802;
     public final static int Client_Bind = 0x803;
     public final static int Client_Bind_Resp = 0x804;
+    public final static int Client_Heartbeat = 0x805;
 
     //骰子相关 0x10001 ~ 0x10800
     public final static int BluffDice_Send = 0x10001;

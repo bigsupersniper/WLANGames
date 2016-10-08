@@ -90,7 +90,6 @@
                     android:layout_toEndOf="@+id/etPort"
                     android:layout_toRightOf="@+id/etCount"
                     android:checked="false"
-                    android:singleLine="false"
                     android:textOff="停止"
                     android:textOn="开启" />
 
@@ -116,7 +115,7 @@
                     android:layout_toEndOf="@+id/tvClientIP"
                     android:layout_toRightOf="@+id/tvClientIP"
                     android:minWidth="50dp"
-                    android:numeric="integer"
+                    android:inputType="number"
                     android:text="6" />
 
             </RelativeLayout>
@@ -141,7 +140,7 @@
                     android:layout_marginTop="-10dp"
                     android:layout_toRightOf="@+id/textView10"
                     android:minWidth="75dp"
-                    android:numeric="integer"
+                    android:inputType="number"
                     android:text="1206" />
 
                 <TextView
@@ -187,7 +186,7 @@
                     android:layout_marginTop="-10dp"
                     android:layout_toRightOf="@+id/textView8"
                     android:minWidth="180dp"
-                    android:numeric="integer" />
+                    android:inputType="number"/>
 
                 <TextView
                     android:id="@+id/textView6"
@@ -218,7 +217,6 @@
                     android:layout_toEndOf="@+id/etServerPort"
                     android:layout_toRightOf="@+id/etServerPort"
                     android:checked="false"
-                    android:singleLine="false"
                     android:textOff="断开"
                     android:textOn="连接" />
 
@@ -230,7 +228,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="false"
                 android:layout_alignParentTop="false"
-                android:text="WLAN Games © LINFENG 2014"
+                android:text="WLAN Games © LINFENG 2014 - 2016"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:layout_centerHorizontal="true"
                 android:layout_below="@+id/rlClient"

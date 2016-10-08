@@ -8,6 +8,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +30,8 @@ public class SocketClient {
     private String localIP;
     private String remoteIP;
     private String id;
+    private long lastAliableTime = System.currentTimeMillis();
+    private Timer timer;
     private OnSocketClientListener onSocketClientListener;
 
     public SocketClient() {
@@ -174,6 +181,33 @@ public class SocketClient {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public long getLastAliableTime(){
+        return this.lastAliableTime;
+    }
+
+    public void setLastAliableTime(){
+        this.lastAliableTime = System.currentTimeMillis();
+    }
+
+    public void startTimer(){
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                if (isConnected()){
+                    send(SocketCmd.Client_Heartbeat , "");
+                }
+            }
+        };
+        timer = new Timer();
+        timer.schedule(task , 5000 , 45 * 1000);
+    }
+
+    public void stopTimer(){
+        if (this.timer != null){
+            this.timer.cancel();
+        }
     }
 
     public void disconnect() {

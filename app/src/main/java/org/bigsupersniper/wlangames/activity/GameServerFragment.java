@@ -145,12 +145,15 @@ public class GameServerFragment extends Fragment {
 
         @Override
         public void onConnected(SocketClient client) {
-
+            //start heartbeat timer
+            client.startTimer();
         }
 
         @Override
         public void onDisconnected(SocketClient client) {
             sendMessage(SendWhats.Client_Disconnected, "已从服务器断开连接");
+            //stop heartbeat timer
+            client.stopTimer();
         }
 
         @Override

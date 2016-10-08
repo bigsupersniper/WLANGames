@@ -45,7 +45,7 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="15dp"
-            android:text="开"
+            android:text="开启"
             android:textSize="24dp"
             android:visibility="invisible"/>
 
@@ -55,7 +55,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/btnOpen"
             android:layout_centerHorizontal="true"
-            android:text="最后5局记录"
+            android:text="最近5局记录"
             android:layout_marginTop="15dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:layout_alignParentLeft="true"
