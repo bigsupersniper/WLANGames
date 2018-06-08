@@ -13,10 +13,7 @@ import org.bigsupersniper.wlangames.common.BluffDiceAnalysis;
 import org.bigsupersniper.wlangames.common.DiceAnalysis;
 import org.bigsupersniper.wlangames.view.DiceListViewAdapter;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;

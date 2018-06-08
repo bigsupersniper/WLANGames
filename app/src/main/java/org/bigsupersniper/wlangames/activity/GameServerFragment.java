@@ -190,11 +190,11 @@ public class GameServerFragment extends Fragment {
     };
 
     private void initServerView(View view) {
-        tvIP = (TextView) view.findViewById(R.id.tvIP);
+        tvIP = view.findViewById(R.id.tvIP);
         tvIP.setText(WifiUtils.getIPAdress(getActivity()));
-        etPort = (EditText) view.findViewById(R.id.etPort);
-        etCount = (EditText) view.findViewById(R.id.etCount);
-        swServer = (Switch) view.findViewById(R.id.swServer);
+        etPort = view.findViewById(R.id.etPort);
+        etCount = view.findViewById(R.id.etCount);
+        swServer = view.findViewById(R.id.swServer);
         swServer.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -228,13 +228,13 @@ public class GameServerFragment extends Fragment {
     }
 
     private void initClientView(View view) {
-        etServerIp = (EditText) view.findViewById(R.id.etServerIP);
-        etServerPort = (EditText) view.findViewById(R.id.etServerPort);
+        etServerIp = view.findViewById(R.id.etServerIP);
+        etServerPort = view.findViewById(R.id.etServerPort);
         //设置服务器ip
         etServerIp.setText(tvIP.getText().toString());
-        etClientId = (EditText) view.findViewById(R.id.etClientId);
+        etClientId = view.findViewById(R.id.etClientId);
         etClientId.setText(StringUtils.getRandom(5));
-        swClient = (Switch) view.findViewById(R.id.swClient);
+        swClient = view.findViewById(R.id.swClient);
         swClient.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
